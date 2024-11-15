@@ -9,9 +9,10 @@ const data = [
 
 export const AssetDistribution = () => {
   return (
-    <div className="w-full h-[400px] bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700">
+    <div className="w-full h-[350px] 2xl:h-[500px] bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700">
       <h2 className="text-lg font-semibold text-white mb-4">資産配分</h2>
       <ResponsiveContainer width="100%" height="90%">
+        {/* 円グラフ */}
         <PieChart>
           <Pie
             data={data}
@@ -23,10 +24,12 @@ export const AssetDistribution = () => {
             dataKey="value"
           >
             {data.map((entry, index) => (
+              // 各セクションの色を指定
               // 他の要素のkeyと衝突させないためにcell-というプレフィックスをつける
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
+          {/* グラフのセクションにカーソルを合わせた際に表示される内容を設定 */}
           <Tooltip 
             contentStyle={{ 
               backgroundColor: '#1f2937',
@@ -37,6 +40,7 @@ export const AssetDistribution = () => {
             itemStyle={{ color: '#ffffff' }}
             formatter={(value: number, name: string) => [`¥${value.toLocaleString()}`, name]}
           />
+          {/* 円グラフ下の通貨を設定 */}
           <Legend 
             height={36}
             content={({ payload }) => (

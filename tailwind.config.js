@@ -5,7 +5,12 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      screens: {
+        '3xl': '1920px',  // WQHD対応
+        '4xl': '2560px',  // 4K対応
+      },
+    },
   },
   plugins: [],
 }

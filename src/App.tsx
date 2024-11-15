@@ -7,13 +7,13 @@ import { Dashboard } from './pages/Dashboard';
 const App = () => {
   return (
     <BrowserRouter>
-      <div className="flex min-h-screen">
+      <div className="fixed flex w-full h-full">
         {/* Sidebarコンテナ */}
-        <nav className=''>
+        <nav>
           <Sidebar />
         </nav>
         {/* mainコンテナ */}
-        <main className="flex-1 w-full ml-64">
+        <main className="flex-grow p-10">
           <Routes>
             <Route path="/" element={<Dashboard />} />
           </Routes>

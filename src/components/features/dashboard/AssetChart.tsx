@@ -17,7 +17,7 @@ const data: AssetChartData[] = [
 
 export const AssetChart = () => {
   return (
-    <div className="w-full h-[400px] bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700">
+    <div className="w-full h-[350px] 2xl:h-[500px] bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700">
       <h2 className="text-lg font-semibold text-white mb-4">資産推移</h2>
       <ResponsiveContainer width="100%" height="90%">
         <AreaChart data={data}>

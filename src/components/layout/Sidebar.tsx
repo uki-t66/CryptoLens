@@ -6,7 +6,7 @@ export const Sidebar = () => {
 
   
   return (
-    <div className="fixed w-64 h-full bg-gray-800  border border-gray-700">
+    <div className="w-64 h-full bg-gray-800  border border-gray-700">
       <ul className="py-2">
         {SIDEBAR_DATA.map((sidebar_item) => {
 
@@ -31,7 +31,7 @@ export const Sidebar = () => {
                 <div className="flex items-center justify-center w-5 h-5">
                   {<sidebar_item.icon className={`${isActive ? 'text-blue-600' : 'text-white'}`} />}
                 </div>
-                <div className="flex items-center justify-center font-medium">
+                <div className="flex items-center justify-center font-medium text-lg">
                   {sidebar_item.title}
                 </div>
               </li>
