@@ -31,7 +31,7 @@ export const Sidebar = () => {
                 <div className="flex items-center justify-center w-5 h-5">
                   {<sidebar_item.icon className={`${isActive ? 'text-blue-600' : 'text-white'}`} />}
                 </div>
-                <div className="flex items-center justify-center font-medium text-lg">
+                <div className="flex items-center justify-center font-medium 2xl:text-lg">
                   {sidebar_item.title}
                 </div>
               </li>
