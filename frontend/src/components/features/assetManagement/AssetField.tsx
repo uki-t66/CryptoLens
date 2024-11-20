@@ -9,34 +9,6 @@ import {
   } from "@/components/ui/table"
 
 
-
-interface CoinData {
-    id: number;
-    coin: string;
-    price: number; // 文字列化される可能性があるためunion型
-    amount: number;
-    ticker: string
-    value?: number; // 計算後に値が追加される
-  }
-
-const data: CoinData[] = [
-    {
-        id: 1,
-        coin: "Bitcoin", 
-        price: 80000,
-        amount: 1.5,
-        ticker: "BTC"
-    },
-    {   
-        id: 2,
-        coin: "Ethereum",
-        price: 5000,
-        amount: 3,
-        ticker: "ETH"
-    },
-]
-
-
 export const AssetField = () => {
     return (
         // Table の上にdivを配置し、高さとrelativeを設定し、それに'overflow-auto'クラスを追加し固定.
