@@ -1,5 +1,7 @@
 import HomeIcon from '@mui/icons-material/Home';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import AddIcon from '@mui/icons-material/Add';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import TaskIcon from '@mui/icons-material/Task';
@@ -26,6 +28,18 @@ export const SIDEBAR_DATA: SidebarItems[] = [
         title: "Asset",
         icon: AccountBalanceWalletIcon,
         link: "/asset"
+    },
+    {
+        id: "tx",
+        title: "Transaction",
+        icon: AddIcon,
+        link: "/tx-history"
+    },
+    {
+        id: "analytics",
+        title: "Analytics",
+        icon: AnalyticsIcon,
+        link: "/analytics"
     },
     {
         id: "tracking",
