@@ -1,3 +1,15 @@
+import {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+  } from "@/components/ui/table"
+
+
+
 interface CoinData {
     id: number;
     coin: string;
@@ -27,41 +39,32 @@ const data: CoinData[] = [
 
 export const AssetField = () => {
     return (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-700 mb-8">
-            {/* columnヘッダー */}
-            <div className="bg-gray-700 p-6 rounded-lg shadow-sm border border-gray-600">
-                <ul className="text-white grid grid-cols-6">
-                    <li>Asset</li>
-                    <li>Price</li>
-                    <li>Amount</li>
-                    <li>Total Value</li>
-                    <li>Profit / Loss</li> {/* 日、月、年ごとにソート可能にする。下のliと連動。 */}
-                    <li>24h Change</li>
-                </ul>
-            </div>
-            {/* assetの詳細情報 */}
-            <div className="text-white">
-                <ul>
-                    { data.map((item) => {
-                        return(
-                            <li key={item.id} className="grid grid-cols-6 p-6 ">
-                                <div>
-                                    { item.coin }
-                                </div>
-                                <div>
-                                    { item.price }
-                                </div>
-                                <div>
-                                    { item.amount } { item.ticker}
-                                </div>
-                                <div>
-                                    { `$${item.price * item.amount}` }
-                                </div>
-                            </li>
-                        )
-                    })}
-                </ul>
-            </div>
+        // Table の上にdivを配置し、高さとrelativeを設定し、それに'overflow-auto'クラスを追加し固定.
+        <div className="h-5/6 relative bg-gray-800 px-6 rounded-lg shadow-sm border border-gray-700 overflow-auto">
+            <Table>
+                <TableCaption>Crypto Currency Portfolio.</TableCaption>
+                {/* sticky追加でasset数が多い場合に対応 */}
+                <TableHeader className="sticky top-0 bg-gray-800">
+                    <TableRow className="pointer-events-none">
+                    <TableHead>Asset</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Value</TableHead>
+                    <TableHead>24h Change</TableHead> {/* day,month,yearでソート可能にする。Profit / Lossと連動。 */}
+                    <TableHead>Profit / Loss</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow>
+                    <TableCell>BTC</TableCell>
+                    <TableCell>$80,000</TableCell>
+                    <TableCell>3</TableCell>
+                    <TableCell>$240,000</TableCell>
+                    <TableCell className="text-green-500">+ $1200</TableCell>
+                    <TableCell className="text-green-500">△10.5%</TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
         </div>
     )
 }
