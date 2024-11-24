@@ -33,7 +33,7 @@ export const SIDEBAR_DATA: SidebarItems[] = [
         id: "tx",
         title: "Transaction",
         icon: AddIcon,
-        link: "/tx-history"
+        link: "/transaction"
     },
     {
         id: "analytics",
