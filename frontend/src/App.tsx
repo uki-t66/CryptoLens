@@ -3,6 +3,7 @@ import './App.css';
 import { Sidebar } from './components/layout/Sidebar';
 import { Dashboard } from './pages/Dashboard';
 import { Asset } from './pages/Asset';
+import { Transaction } from './pages/Transaction';
 
 
 const App = () => {
@@ -18,6 +19,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/asset" element={<Asset />} />
+            <Route path="/transaction" element={<Transaction />} />
           </Routes>
         </main>
       </div>
