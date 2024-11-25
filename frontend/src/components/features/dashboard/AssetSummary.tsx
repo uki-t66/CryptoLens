@@ -7,7 +7,7 @@ interface AssetSummaryItemProps {
   
 const AssetSummaryItem = ({ title, amount, change, isPositive }: AssetSummaryItemProps) => {
     return (
-        <div className="flex flex-col justify-around my-2 h-[200px] bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-700">
+        <div className="flex flex-col justify-around my-2 h-[200px] 2xl:h-[230px] bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-700">
           <h3 className="text-xl font-semibold 2xl:text-2xl text-white mb-2">{title}</h3>
           <div className="text-2xl font-bold text-white mb-2">{amount}</div>
           {/* 損益がプラスであればgreen,マイナスであればレッド */}

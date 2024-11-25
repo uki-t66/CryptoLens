@@ -11,12 +11,12 @@ export const Dashboard = () => {
         <Header headerTitle={ "Dashboard" }/>
 
         {/* 総資産サマリー */}
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="mx-10 mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <AssetSummary />
         </div>
 
          {/* グラフセクション */}
-        <div className="grid grid-cols-3 gap-8">
+        <div className="mx-10 grid grid-cols-3 gap-8">
           <div className="col-span-2">
             <AssetChart />
           </div>

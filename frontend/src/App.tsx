@@ -28,7 +28,7 @@ const App = () => {
           />
         </nav>
         {/* mainコンテナ */}
-        <main className="flex-grow p-10">
+        <main className="flex-grow  pb-10">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/asset" element={<Asset />} />

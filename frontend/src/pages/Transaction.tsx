@@ -7,7 +7,6 @@ export const Transaction = () => {
         <>
             <Header headerTitle="Transaction" />
             <TxHistory/>
-            <AddTx/>
         </>
     )
 }
