@@ -1,16 +1,32 @@
 import { SIDEBAR_DATA } from "./SidebarData";
 import { Link, useLocation } from 'react-router-dom';
+import { Menu } from 'lucide-react';
 
-export const Sidebar = () => {
+interface SidebarProps {
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const { pathname } = useLocation();
 
-  
   return (
-    <div className="w-64 h-full bg-gray-800  border border-gray-700">
+    <>
+      <div className="px-4 py-3 flex items-center justify-between">
+        {isOpen && (
+          <h2 className="text-white font-sans font-semibold text-xl 2xl:text-2xl">CryptoLens</h2>
+        )}
+        <button
+          onClick={onToggle} //buttonクリックでSidebar開閉
+          className="p-1 rounded-lg text-white hover:bg-gray-700"
+          aria-label="Toggle sidebar"
+        >
+          <Menu size={24} />
+        </button>
+      </div>
       <ul className="py-2">
         {SIDEBAR_DATA.map((sidebar_item) => {
-
-    // 現在のURLパス(pathname)とメニュー項目のリンク(value.link)が一致するか確認  
+          // Sidebarの現在位置をbooleanで保持
           const isActive = pathname === sidebar_item.link;
 
           return (
@@ -20,25 +36,28 @@ export const Sidebar = () => {
             >
               <li
                 className={`
-                  flex items-center px-4 py-2 gap-3
+                  flex items-center px-4 py-3
                   cursor-pointer
                   ${isActive 
                     ? 'bg-gray-300 text-blue-600' 
                     : 'text-white hover:bg-gray-500'
                   }
+                  ${isOpen ? 'gap-3' : 'justify-center'}
                 `}
               >
                 <div className="flex items-center justify-center w-5 h-5">
                   {<sidebar_item.icon className={`${isActive ? 'text-blue-600' : 'text-white'}`} />}
                 </div>
-                <div className="flex items-center justify-center font-medium 2xl:text-lg">
-                  {sidebar_item.title}
-                </div>
+                {isOpen && (
+                  <div className="flex items-center justify-center font-medium 2xl:text-lg">
+                    {sidebar_item.title}
+                  </div>
+                )}
               </li>
             </Link>
           );
         })}
       </ul>
-    </div>
+    </>
   );
 };
