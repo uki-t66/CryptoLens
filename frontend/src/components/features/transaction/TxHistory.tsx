@@ -24,6 +24,7 @@ export const TxHistory = () => {
                     <TableHead>Tx Type</TableHead> {/* Buy or Sell or Staking or Reward(Sell枠) or Transfer */}
                     <TableHead>Asset</TableHead>
                     <TableHead>Price</TableHead> {/* usd or jpy 表記 */}
+                    <TableHead>Amount</TableHead>
                     <TableHead>Fee</TableHead> {/* 取引手数料、送金手数料、gasFee */}
                     <TableHead>Total</TableHead>
                     <TableHead>BlockChain</TableHead>
@@ -37,8 +38,9 @@ export const TxHistory = () => {
                     <TableCell className="text-green-500">Buy</TableCell>
                     <TableCell>SOL</TableCell>
                     <TableCell>$210</TableCell>
+                    <TableCell>3</TableCell>
                     <TableCell>$10</TableCell>
-                    <TableCell>$200</TableCell>
+                    <TableCell>$640</TableCell>
                     <TableCell>solana</TableCell>
                     <TableCell className="max-w-52 overflow-x-auto border border-gray-700">5gse3jBpgwzW9V2qzcY6WTWUbLEcmzVJYkb8vL8FRwKD1Wo8mbs8bheP1WhTvsdeHyam7XiTX6TVKJ1sy8CdVUcEiii</TableCell>
                     </TableRow>
@@ -50,8 +52,9 @@ export const TxHistory = () => {
                     <TableCell className="text-green-500">Buy</TableCell>
                     <TableCell>SOL</TableCell>
                     <TableCell>$210</TableCell>
+                    <TableCell>3</TableCell>
                     <TableCell>$10</TableCell>
-                    <TableCell>$200</TableCell>
+                    <TableCell>$640</TableCell>
                     <TableCell>solana</TableCell>
                     <TableCell className="max-w-52 overflow-x-auto border border-gray-700">5gse3jBpgwzW9V2qzcY6WTWUbLEcmzVJYkb8vL8FRwKD1Wo8mbs8bheP1WhTvsdeHyam7XiTX6TVKJ1sy8CdVUcEiii</TableCell>
                     </TableRow>
