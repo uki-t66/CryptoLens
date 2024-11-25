@@ -7,10 +7,11 @@ export default {
   ],
   theme: {
   	extend: {
-  		screens: {
-  			'3xl': '1920px',
-  			'4xl': '2560px'
-  		},
+		screens: {
+			'3xl': '1920px', // Full HD
+			'4xl': '2560px', // WQHD
+			'5xl': '3840px', // 4K
+		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
