@@ -19,9 +19,9 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <div className="flex w-full h-full">
+      <div className="fixed flex w-full h-full">
         {/* Sidebarコンテナ */}
-        <nav className={`flex-grow bg-gray-800  border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-64' : 'w-16'}`}>
+        <nav className={`bg-gray-800  border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-64' : 'w-16'}`}>
           <Sidebar 
             isOpen={isSidebarOpen} // 現在のSidebar開閉状態
             onToggle={toggleSidebar} // 状態を更新する関数
