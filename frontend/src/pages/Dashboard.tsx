@@ -16,13 +16,9 @@ export const Dashboard = () => {
         </div>
 
          {/* グラフセクション */}
-        <div className="mx-10 grid grid-cols-3 gap-8">
-          <div className="col-span-2">
+        <div className="mx-10 h-full flex gap-8 overflow-auto">
             <AssetChart />
-          </div>
-          <div className='col-span-1'>
             <AssetDistribution />
-          </div>
         </div>
       </div>
   );

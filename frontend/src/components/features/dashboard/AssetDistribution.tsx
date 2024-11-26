@@ -9,7 +9,7 @@ const data = [
 
 export const AssetDistribution = () => {
   return (
-    <div className="w-full h-[410px] 2xl:h-[530px] bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700">
+    <div className="w-[30%] h-full bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700">
       <h2 className="text-lg 2xl:text-2xl font-semibold text-white mb-4">資産配分</h2>
       <ResponsiveContainer width="100%" height="90%">
         {/* 円グラフ */}
