@@ -9,21 +9,29 @@ import {
   } from "@/components/ui/table"
 
 import AddIcon from '@mui/icons-material/Add';
+import { AddTx } from "./AddTx";
+import { useState } from "react";
 
 
 
 export const TxHistory = () => {
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     return (
         <>
             <div className="mx-10 h-[88%] relative bg-gray-800 px-6 rounded-lg shadow-sm border border-gray-700 overflow-auto mb-8">
                 
                 {/* Transactionを追加するボタン */}
                 <div className="flex items-center justify-end">
-                    <button className="px-7 m-3 rounded-lg shadow-sm border border-gray-400 text-white hover:bg-gray-500 transition-all duration-200">
-                        <AddIcon/>
+                    <button 
+                        onClick={() => setIsModalOpen(true)}
+                        className="px-7 m-3 rounded-lg shadow-sm border border-gray-400 text-white hover:bg-gray-500 transition-all duration-200">
+                         <AddIcon/>
                     </button>
                 </div>
 
+                {/* Transaction(取引履歴)表示*/}
                 <Table>
                     <TableCaption>Crypto Currency Transaction.</TableCaption>
                     {/* sticky追加でasset数が多くスクロールする場合に対応 */}
@@ -71,6 +79,12 @@ export const TxHistory = () => {
                     </TableBody>
                 </Table>
             </div> 
+
+            {/* AddTxコンポーネント モーダル */}
+            <AddTx
+                open={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+            />
         </>
     )
 }
