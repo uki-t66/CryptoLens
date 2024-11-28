@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es6",                
+    "module": "commonjs",           
+    "outDir": "./dist",            // コンパイルされたJavaScriptファイルの出力先
+    "rootDir": "./src",            // TypeScriptソースファイルのルートディレクトリ
+    "strict": true,                // 厳格な型チェックを有効化
+    "esModuleInterop": true,       // CommonJSモジュールをインポートしやすくする
+    "skipLibCheck": true,          // 型定義ファイルのチェックをスキップ
+    "forceConsistentCasingInFileNames": true, // ファイル名の大文字小文字を厳格にチェック
+    "moduleResolution": "node"     // モジュール解決方法をNode.jsに設定
+  },
+  "include": ["src/**/*"],         // コンパイル対象のファイル
+  "exclude": ["node_modules"]      // コンパイル対象から除外するディレクトリ
+}
