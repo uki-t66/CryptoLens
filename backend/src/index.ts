@@ -1,10 +1,12 @@
+import { log } from 'console';
 import express, { Express, Request, Response } from 'express';
 
 const app: Express = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8000;
 
 // ミドルウェアの設定
 app.use(express.json());
+// formをparse
 app.use(express.urlencoded({ extended: true }));
 
 // ルートハンドラー
@@ -13,7 +15,8 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // 基本的なAPIエンドポイント
-app.get('/api/health', (req: Request, res: Response) => {
+app.post('/transaction', (req: Request, res: Response) => {
+    console.log(req.body)
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
