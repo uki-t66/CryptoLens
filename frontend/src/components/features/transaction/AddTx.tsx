@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect, useRef } from 'react';
 
 const COINGECKO_API = import.meta.env.VITE_COINGECKO_API;
+const ExchangeRate_API = import.meta.env.VITE_ExchangeRate_API;
 
 
 // AddTxコンポーネント
@@ -24,6 +25,7 @@ export const AddTx = ({ open, onClose }: { open: boolean; onClose: () => void })
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null); // デバウンス用のタイマー参照
   const [selectedDate, setSelectedDate] = useState<string>(''); // Inputで選択された日付
   const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null); //Inputで選択されたSymbol
+  const [exchangeRate,setExchangeRate] = useState(""); //USD/JPYのレートを管理
   const [price, setPrice] = useState<string>(''); // COINGECKOから取得した価格
 
   // fetchしたデータの型定義
@@ -179,10 +181,40 @@ const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const newDate = e.target.value;
   setSelectedDate(newDate);
 
-   // アセットが選択済みの場合、価格を取得
-   if (selectedCoin) {  // suggestionsではなくselectedCoinを使用
-    fetchHistoricalPrice(selectedCoin.id, newDate);
+  // 為替レートを取得
+  fetchExchangeRate(newDate);
+
+  // アセットが選択済みの場合、価格を取得
+  if (selectedCoin) {  // suggestionsではなくselectedCoinを使用
+  fetchHistoricalPrice(selectedCoin.id, newDate);
+  }
+};
+
+// 為替レート取得関数
+const fetchExchangeRate = async (date: string) => {
+  try {
+    setIsLoading(true);
+
+    const response = await fetch(
+      `${ExchangeRate_API}/${date}?from=USD&to=JPY`
+    );
+    const data = await response.json();
+
+    if (data.rates?.JPY) {
+      // 小数点第二位まで表示
+      const formattedRate = Number(data.rates.JPY).toFixed(2);
+      setExchangeRate(formattedRate);
+    } else {
+      alert('この日付の為替レートデータは利用できません。');
+      setExchangeRate("");
     }
+  } catch (error) {
+    console.error('為替レートの取得に失敗:', error);
+    alert('為替レートの取得に失敗しました。');
+    setExchangeRate("");
+  } finally {
+    setIsLoading(false);
+  }
 };
 
   // フォーム送信時のハンドラー
@@ -297,7 +329,6 @@ const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   id="price"
                   value={price}
                   readOnly  // 読み取り専用
-                  
                   className="pl-6 bg-gray-700 text-white border-gray-600 cursor-not-allowed"
                   placeholder="0.00"
                 />
@@ -346,6 +377,27 @@ const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   <SelectItem value="solana">Solana</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* USD / JPY */}
+            <div className="space-y-2">
+              <Label htmlFor="exchange-rate" className="text-white">USD / JPY ( Enter Date )</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-gray-400">¥</span>
+                <Input 
+                  type="number"
+                  id="exchange-rate"
+                  value={exchangeRate || ''}
+                  readOnly
+                  className="pl-6 bg-gray-700 text-white border-gray-600 cursor-not-allowed focus:ring-0 focus:ring-offset-0 focus:border-gray-600"
+                  placeholder="Enter Date"
+                />
+                {isLoading && (
+                  <div className="absolute right-2 top-2">
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Transaction ID */}
