@@ -37,7 +37,7 @@ export const TxHistory = () => {
                     {/* sticky追加でasset数が多くスクロールする場合に対応 */}
                     <TableHeader className="sticky top-0 bg-gray-800">
                         <TableRow className="pointer-events-none">
-                        <TableHead>Date & Time</TableHead>
+                        <TableHead>Date</TableHead>
                         <TableHead>Exchange</TableHead>
                         <TableHead>Tx Type</TableHead> {/* Buy or Sell or Staking or Reward(Sell枠) or Transfer */}
                         <TableHead>Asset</TableHead>
