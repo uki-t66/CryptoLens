@@ -22,6 +22,9 @@ export const AddTx = ({ open, onClose }: { open: boolean; onClose: () => void })
   const [isLoading, setIsLoading] = useState(false); // ローディング状態
   const [showSuggestions, setShowSuggestions] = useState(false); // 候補表示制御
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null); // デバウンス用のタイマー参照
+  const [selectedDate, setSelectedDate] = useState<string>(''); // Inputで選択された日付
+  const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null); //Inputで選択されたSymbol
+  const [price, setPrice] = useState<string>(''); // COINGECKOから取得した価格
 
   // fetchしたデータの型定義
   interface Coin {
@@ -92,12 +95,19 @@ export const AddTx = ({ open, onClose }: { open: boolean; onClose: () => void })
 
   // 検索候補クリック時のハンドラー
   const handleSuggestionClick = (coin: Coin) => {
-    // 入力フィールドに選択された通貨のシンボルをセット
-    setSearchTerm(coin.symbol);
-    // 検索候補リストをクリア
-    setSuggestions([]);
-    // 検索候補の表示を無効化
-    setShowSuggestions(false);
+      // 入力フィールドに選択された通貨のシンボルをセット
+      setSearchTerm(coin.symbol);
+      // 選択されたコインを保存
+      setSelectedCoin(coin);
+      // 検索候補リストをクリア
+      setSuggestions([]);
+      // 検索候補の表示を無効化
+      setShowSuggestions(false);
+
+      // 日付が選択済みの場合、価格を取得
+      if (selectedDate) {
+        fetchHistoricalPrice(coin.id, selectedDate);
+      };
   };
 
   // コンポーネントのクリーンアップ
@@ -129,6 +139,52 @@ export const AddTx = ({ open, onClose }: { open: boolean; onClose: () => void })
       };
   }, []);
 
+
+  // COINGECKOから指定された日付の通貨価格を取得する関数
+const fetchHistoricalPrice = async (coinId: string, date: string) => {
+  try {
+    // ローディング開始
+    setIsLoading(true);
+
+    // 日付のフォーマットを変換 (YYYY-MM-DD → DD-MM-YYYY)
+    const [year, month, day] = date.split('-');
+    const formattedDate = `${day}-${month}-${year}`;
+
+    // COINGECKO APIにリクエスト
+    const response = await fetch(
+      `${COINGECKO_API}/coins/${coinId}/history?date=${formattedDate}`
+    );
+    const data = await response.json();
+
+    // レスポンスから価格を取得して状態を更新
+    if (data.market_data?.current_price?.usd) {
+      // 小数点第二位までを価格表示する
+      const formattedPrice = Number(data.market_data.current_price.usd).toFixed(2);
+      setPrice(formattedPrice);
+    } else {
+      alert('この日付の価格データは利用できません。');
+      setPrice('');
+    }
+  } catch (error) {
+    console.error('価格の取得に失敗:', error);
+    alert('価格の取得に失敗しました。しばらくしてから再試行してください。');
+    setPrice('');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+// 日付入力時のハンドラー
+const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const newDate = e.target.value;
+  setSelectedDate(newDate);
+
+   // アセットが選択済みの場合、価格を取得
+   if (selectedCoin) {  // suggestionsではなくselectedCoinを使用
+    fetchHistoricalPrice(selectedCoin.id, newDate);
+    }
+};
+
   // フォーム送信時のハンドラー
   const handleSubmit = (e: React.FormEvent) => {
     // フォームのデフォルトの送信動作を防止
@@ -147,16 +203,19 @@ export const AddTx = ({ open, onClose }: { open: boolean; onClose: () => void })
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-            {/* Date & Time */}
+            {/* Date */}
             <div className="space-y-2">
-              <Label htmlFor="datetime" className="text-white">Date & Time</Label>
+              <Label htmlFor="date" className="text-white">Date</Label>
               <Input 
                 type="date" 
-                id="datetime" 
+                id="date"
+                value={selectedDate}
+                onChange={handleDateChange}
                 className="bg-gray-700 text-white border-gray-600" 
                 style={{ WebkitAppearance: 'none', colorScheme: 'dark' }}
               />
             </div>
+
 
             {/* Exchange */}
             <div className="space-y-2">
@@ -189,7 +248,7 @@ export const AddTx = ({ open, onClose }: { open: boolean; onClose: () => void })
 
             {/* Asset( Symbol )*/}
             <div className="space-y-2">
-              <Label htmlFor="asset" className="text-white">Asset ( Please enter a Symbol )</Label>
+              <Label htmlFor="asset" className="text-white">Asset ( Enter a Symbol )</Label>
               <div className="relative crypto-search-container">
                 <Input
                   type="text"
@@ -230,14 +289,24 @@ export const AddTx = ({ open, onClose }: { open: boolean; onClose: () => void })
 
             {/* Price */}
             <div className="space-y-2">
-              <Label htmlFor="price" className="text-white">Price</Label>
+              <Label htmlFor="price" className="text-white">Price ( Enter Date and Asset )</Label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-gray-400">$</span>
                 <Input 
                   type="number" 
-                  id="price" 
-                  className="pl-6 bg-gray-700 text-white border-gray-600" 
+                  id="price"
+                  value={price}
+                  readOnly  // 読み取り専用
+                  
+                  className="pl-6 bg-gray-700 text-white border-gray-600 cursor-not-allowed"
+                  placeholder="0.00"
                 />
+                {/* 価格取得中のローディング表示 */}
+                {isLoading && (
+                  <div className="absolute right-2 top-2">
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
               </div>
             </div>
 
