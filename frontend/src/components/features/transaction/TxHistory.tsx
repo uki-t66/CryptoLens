@@ -46,6 +46,7 @@ export const TxHistory = () => {
                         <TableHead>Fee</TableHead> {/* 取引手数料、送金手数料、gasFee */}
                         <TableHead>Total</TableHead>
                         <TableHead>BlockChain</TableHead>
+                        <TableHead>USD / JPY</TableHead>
                         <TableHead>TXID</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -60,6 +61,7 @@ export const TxHistory = () => {
                         <TableCell>$10</TableCell>
                         <TableCell>$640</TableCell>
                         <TableCell>solana</TableCell>
+                        <TableCell>150.2</TableCell>
                         <TableCell className="max-w-52 overflow-x-auto border border-gray-700">5gse3jBpgwzW9V2qzcY6WTWUbLEcmzVJYkb8vL8FRwKD1Wo8mbs8bheP1WhTvsdeHyam7XiTX6TVKJ1sy8CdVUcEiii</TableCell>
                         </TableRow>
                     </TableBody>
@@ -74,6 +76,7 @@ export const TxHistory = () => {
                         <TableCell>$10</TableCell>
                         <TableCell>$640</TableCell>
                         <TableCell>solana</TableCell>
+                        <TableCell>150.2</TableCell>
                         <TableCell className="max-w-52 overflow-x-auto border border-gray-700">5gse3jBpgwzW9V2qzcY6WTWUbLEcmzVJYkb8vL8FRwKD1Wo8mbs8bheP1WhTvsdeHyam7XiTX6TVKJ1sy8CdVUcEiii</TableCell>
                         </TableRow>
                     </TableBody>
