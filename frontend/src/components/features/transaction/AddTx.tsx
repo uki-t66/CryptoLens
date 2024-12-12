@@ -26,6 +26,8 @@ export const AddTx = ({ open, onClose }: { open: boolean; onClose: () => void })
   const [selectedDate, setSelectedDate] = useState<string>(''); // Inputで選択された日付
   const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null); //Inputで選択されたSymbol
   const [exchangeRate,setExchangeRate] = useState(""); //USD/JPYのレートを管理
+  const [transactionTypeData, setTransactionTypeData] = useState<string>(''); //選択したTxTypeを管理
+  const [blockchainData, setBlockchainData] = useState<string>(''); //選択したblockchainを管理
   const [price, setPrice] = useState<string>(''); // COINGECKOから取得した価格
 
   // fetchしたデータの型定義
@@ -36,6 +38,19 @@ export const AddTx = ({ open, onClose }: { open: boolean; onClose: () => void })
     thumb: string;
   }
   
+  // submitするformのdataの型定義
+  interface TransactionForm {
+    date: string;
+    exchange: string;
+    transactionType: string;
+    asset: string;
+    price: string;
+    amount: string;
+    fee: string;
+    blockchain: string;
+    exchangeRate: string;
+    transactionId?: string;
+  }
 
   // TransactionフォームのAsset(Symbol)の入力値をcoingecko_apiを使用して検索し、通貨名を統一させる
   const searchCrypto = async (query: string | number) => {
@@ -217,13 +232,50 @@ const fetchExchangeRate = async (date: string) => {
   }
 };
 
+
   // フォーム送信時のハンドラー
-  const handleSubmit = (e: React.FormEvent) => {
-    // フォームのデフォルトの送信動作を防止
-    e.preventDefault();
-    // モーダルを閉じる
+const handleSubmit = async (e: React.FormEvent) => {
+  // フォームのデフォルトの送信動作を防止
+  e.preventDefault();
+  
+  try {
+    // フォームデータの作成
+    const formData: TransactionForm = {
+      date: selectedDate,
+      exchange: (e.target as HTMLFormElement).exchange.value,
+      transactionType: transactionTypeData,
+      asset: searchTerm,
+      price: price,
+      amount: (e.target as HTMLFormElement).amount.value,
+      fee: (e.target as HTMLFormElement).fee.value,
+      blockchain: blockchainData,
+      exchangeRate: exchangeRate,
+      transactionId: (e.target as HTMLFormElement).txid.value || undefined
+    };
+
+    // POSTリクエストの送信
+    const response = await fetch('http://localhost:8000/transaction', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      throw new Error('Transaction submission failed');
+    }
+
+    const result = await response.json();
+    console.log('Transaction submitted:', result);
+    alert('Transaction added successfully!');
     onClose();
-  };
+
+  } catch (error) {
+    console.error('Error submitting transaction:', error);
+    alert('Failed to add transaction. Please try again.');
+  }
+};
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -265,15 +317,15 @@ const fetchExchangeRate = async (date: string) => {
             {/* Transaction Type */}
             <div className="space-y-2">
               <Label htmlFor="txType" className="text-white">Transaction Type</Label>
-              <Select>
+              <Select onValueChange={setTransactionTypeData}>
                 <SelectTrigger className="bg-gray-700 text-white border-gray-600">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="buy">Buy</SelectItem>
-                  <SelectItem value="sell">Sell</SelectItem>
-                  <SelectItem value="reward">Reward</SelectItem>
-                  <SelectItem value="transfer">Transfer</SelectItem>
+                  <SelectItem value="Buy">Buy</SelectItem>
+                  <SelectItem value="Sell">Sell</SelectItem>
+                  <SelectItem value="Reward">Reward</SelectItem>
+                  <SelectItem value="Transfer">Transfer</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -360,6 +412,7 @@ const fetchExchangeRate = async (date: string) => {
                   type="number" 
                   id="fee" 
                   className="pl-6 bg-gray-700 text-white border-gray-600" 
+                  placeholder="0.00"
                 />
               </div>
             </div>
@@ -367,14 +420,27 @@ const fetchExchangeRate = async (date: string) => {
             {/* Blockchain */}
             <div className="space-y-2">
               <Label htmlFor="blockchain" className="text-white">Blockchain</Label>
-              <Select>
+              <Select onValueChange={setBlockchainData}>
                 <SelectTrigger className="bg-gray-700 text-white border-gray-600">
                   <SelectValue placeholder="Select blockchain" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bitcoin">Bitcoin</SelectItem>
-                  <SelectItem value="ethereum">Ethereum</SelectItem>
-                  <SelectItem value="solana">Solana</SelectItem>
+                  <SelectItem value="Bitcoin">Bitcoin</SelectItem>
+                  <SelectItem value="Ethereum">Ethereum</SelectItem>
+                  <SelectItem value="Solana">Solana</SelectItem>
+                  <SelectItem value="Tron">TRON</SelectItem>
+                  <SelectItem value="BSC">BNB Smart Chain</SelectItem>
+                  <SelectItem value="Base">Base</SelectItem>
+                  <SelectItem value="Arbitrum">Arbitrum</SelectItem>
+                  <SelectItem value="Sui">Sui</SelectItem>
+                  <SelectItem value="Avalanche">Avalanche</SelectItem>
+                  <SelectItem value="Hyperliquid">Hyperliquid</SelectItem>
+                  <SelectItem value="Aptos">Aptos</SelectItem>
+                  <SelectItem value="Polygon">Polygon</SelectItem>
+                  <SelectItem value="Optimism">Optimism</SelectItem>
+                  <SelectItem value="Sei">Sei</SelectItem>
+                  <SelectItem value="Zksync">Zksync</SelectItem>
+                  <SelectItem value="Starknet">StarkNet</SelectItem>
                 </SelectContent>
               </Select>
             </div>
