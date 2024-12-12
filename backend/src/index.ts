@@ -1,39 +1,19 @@
-import { log } from 'console';
-import express, { Express, Request, Response } from 'express';
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import transactionRoutes from './routes/tx-routes';
 
-const app: Express = express();
+dotenv.config();
+
+const app = express();
 const port = process.env.PORT || 8000;
 
-// ミドルウェアの設定
+app.use(cors());
 app.use(express.json());
-// formをparse
 app.use(express.urlencoded({ extended: true }));
 
-// ルートハンドラー
-app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'Welcome to CryptoLens API' });
-});
+app.use('/api/transactions', transactionRoutes);
 
-// 基本的なAPIエンドポイント
-app.post('/transaction', (req: Request, res: Response) => {
-    console.log(req.body)
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
-
-// エラーハンドリング
-app.use((req: Request, res: Response) => {
-  res.status(404).json({ message: 'Not Found' });
-});
-
-// サーバーの起動
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 });
-
-// エラー処理のためのイベントリスナー
-process.on('unhandledRejection', (err: Error) => {
-  console.log('Unhandled Rejection:', err.message);
-  process.exit(1);
-});
-
-export default app;
