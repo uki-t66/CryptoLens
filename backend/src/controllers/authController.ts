@@ -57,12 +57,14 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             { expiresIn: '24h' }
         );
 
-
-        res.status(201).json({
-            success: true,
-            message: '登録が完了しました',
-            token
+        // HTTPOnly Cookieを使用
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000 // 24時間
         });
+
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({
