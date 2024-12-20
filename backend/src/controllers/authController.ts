@@ -1,4 +1,3 @@
-// src/controllers/authController.ts
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -57,12 +56,20 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             { expiresIn: '24h' }
         );
 
-
-        res.status(201).json({
-            success: true,
-            message: '登録が完了しました',
-            token
+        // HTTPOnly Cookieを使用
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000 // 24時間
         });
+        
+         // 成功レスポンスを送信
+         res.status(201).json({
+            success: true,
+            message: '登録が完了しました'
+        });
+
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({
@@ -124,3 +131,38 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         });
     }
 };
+
+
+export const verifyAuth = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const token = req.cookies.jwt;
+      
+      if (!token) {
+        res.status(401).json({
+          success: false,
+          message: '認証が必要です'
+        });
+        return;
+      }
+  
+      // トークンの検証
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        id: number;
+        email: string;
+      };
+  
+      res.json({
+        success: true,
+        user: {
+          id: decoded.id,
+          email: decoded.email
+        }
+      });
+    } catch (error) {
+      console.error('Token verification error:', error);
+      res.status(401).json({
+        success: false,
+        message: '無効なトークンです'
+      });
+    }
+  };
