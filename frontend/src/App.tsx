@@ -1,41 +1,105 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import { Sidebar } from './components/layout/Sidebar';
 import { Dashboard } from './pages/Dashboard';
 import { Asset } from './pages/Asset';
 import { Transaction } from './pages/Transaction';
 import { useState } from 'react';
-
+import { SignUp } from './pages/SignUp';
+import { Login } from './pages/Login';
+import { AuthGuard } from './components/features/auth/AuthGuard';
 
 const App = () => {
-
-  // Sidebarの開閉状態を管理
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  // Sidebarのbuttonクリック時に作動する関数
+  
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-
   return (
     <BrowserRouter>
-      <div className="fixed flex w-full h-full">
-        {/* Sidebarコンテナ */}
-        <nav className={`bg-gray-800  border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-64' : 'w-16'}`}>
-          <Sidebar 
-            isOpen={isSidebarOpen} // 現在のSidebar開閉状態
-            onToggle={toggleSidebar} // 状態を更新する関数
-          />
-        </nav>
-        {/* mainコンテナ */}
-        <main className="flex-grow  pb-10">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/asset" element={<Asset />} />
-            <Route path="/transaction" element={<Transaction />} />
-          </Routes>
-        </main>
-      </div>
+      <Routes>
+        {/* 認証不要のルート */}
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/login" element={<Login />} />
+        
+        {/* 認証が必要なルート */}
+        <Route
+          path="/"
+          element={
+            <AuthGuard>
+              <div className="fixed flex w-full h-full">
+                <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-64' : 'w-16'}`}>
+                  <Sidebar 
+                    isOpen={isSidebarOpen}
+                    onToggle={toggleSidebar}
+                  />
+                </nav>
+                <main className="flex-grow pb-10">
+                  <Dashboard />
+                </main>
+              </div>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <AuthGuard>
+              <div className="fixed flex w-full h-full">
+                <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-64' : 'w-16'}`}>
+                  <Sidebar 
+                    isOpen={isSidebarOpen}
+                    onToggle={toggleSidebar}
+                  />
+                </nav>
+                <main className="flex-grow pb-10">
+                  <Dashboard />
+                </main>
+              </div>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/asset"
+          element={
+            <AuthGuard>
+              <div className="fixed flex w-full h-full">
+                <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-64' : 'w-16'}`}>
+                  <Sidebar 
+                    isOpen={isSidebarOpen}
+                    onToggle={toggleSidebar}
+                  />
+                </nav>
+                <main className="flex-grow pb-10">
+                  <Asset />
+                </main>
+              </div>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/transaction"
+          element={
+            <AuthGuard>
+              <div className="fixed flex w-full h-full">
+                <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-64' : 'w-16'}`}>
+                  <Sidebar 
+                    isOpen={isSidebarOpen}
+                    onToggle={toggleSidebar}
+                  />
+                </nav>
+                <main className="flex-grow pb-10">
+                  <Transaction />
+                </main>
+              </div>
+            </AuthGuard>
+          }
+        />
+        
+        {/* デフォルトでログインページにリダイレクト */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 };
