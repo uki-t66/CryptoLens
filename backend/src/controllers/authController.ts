@@ -118,6 +118,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             { expiresIn: '24h' }
         );
 
+        // HTTPOnly Cookieを使用
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000 // 24時間
+        });
+
         res.json({
             success: true,
             message: 'ログインに成功しました',
