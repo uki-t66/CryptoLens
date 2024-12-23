@@ -8,8 +8,8 @@ export const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const navigate = useNavigate();
+
 
   // パスワードのバリデーションルール
   const passwordRules = [
@@ -19,6 +19,10 @@ export const SignUp = () => {
     { rule: /[0-9]/, message: '数字を含む' },
     { rule: /[!@#$%^&*]/, message: '特殊文字(!@#$%^&*)を含む' }
   ];
+//   パスワードのバリデーションエラーを状態管理
+  const [passwordErrors, setPasswordErrors] = useState<string[]>(
+    passwordRules.map(({ message }) => message) // 初期状態はすべてエラー扱い
+  );
 
   // パスワード入力時のバリデーション
   const validatePassword = (value: string) => {
