@@ -12,7 +12,7 @@ import {
 export const AssetField = () => {
     return (
         // Table の親にdivを配置し、高さとrelativeを設定し、それに'overflow-auto'クラスを追加してスクロールを可能にさせ固定.
-        <div className="mx-10 h-[88%] relative bg-gray-800 px-6 rounded-lg shadow-sm border border-gray-700 overflow-auto">
+        <div className="mx-10 h-[88%] relative bg-gray-800 rounded-lg shadow-sm border border-gray-700 overflow-auto">
             <Table>
                 <TableCaption>Crypto Currency Portfolio.</TableCaption>
                 {/* sticky追加でasset数が多くスクロールする場合に対応 */}

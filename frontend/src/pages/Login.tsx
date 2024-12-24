@@ -19,11 +19,10 @@ export const Login = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
-        credentials: 'include', // Cookie取得のために必要
+        credentials: 'include', // Cookie取得のため
       });
 
       const data = await response.json();
-      alert("OK")
 
       if (response.ok) {
         navigate('/dashboard');

@@ -20,7 +20,7 @@ export const TxHistory = () => {
 
     return (
         <>
-            <div className="mx-10 h-[88%] relative bg-gray-800 px-6 rounded-lg shadow-sm border border-gray-700 overflow-auto mb-8">
+            <div className="mx-10 h-[88%] relative bg-gray-800 rounded-lg shadow-sm border border-gray-700 overflow-auto mb-8">
                 
                 {/* Transactionを追加するボタン */}
                 <div className="flex items-center justify-end">
