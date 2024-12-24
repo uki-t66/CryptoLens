@@ -25,24 +25,6 @@ const App = () => {
         
         {/* 認証が必要なルート */}
         <Route
-          path="/"
-          element={
-            <AuthGuard>
-              <div className="fixed flex w-full h-full">
-                <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-64' : 'w-16'}`}>
-                  <Sidebar 
-                    isOpen={isSidebarOpen}
-                    onToggle={toggleSidebar}
-                  />
-                </nav>
-                <main className="flex-grow pb-10">
-                  <Dashboard />
-                </main>
-              </div>
-            </AuthGuard>
-          }
-        />
-        <Route
           path="/dashboard"
           element={
             <AuthGuard>
@@ -78,8 +60,27 @@ const App = () => {
             </AuthGuard>
           }
         />
-        <Route
+         <Route
           path="/transaction"
+          element={
+            <AuthGuard>
+              <div className="fixed flex w-full h-full">
+                <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-64' : 'w-16'}`}>
+                  <Sidebar 
+                    isOpen={isSidebarOpen}
+                    onToggle={toggleSidebar}
+                  />
+                </nav>
+                <main className="flex-grow pb-10">
+                  <Transaction />
+                </main>
+              </div>
+            </AuthGuard>
+          }
+        />
+        
+        <Route
+          path="/analytics"
           element={
             <AuthGuard>
               <div className="fixed flex w-full h-full">

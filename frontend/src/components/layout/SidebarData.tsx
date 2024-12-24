@@ -21,7 +21,7 @@ export const SIDEBAR_DATA: SidebarItems[] = [
         id: "dashboard",
         title: "Dashboard",
         icon: HomeIcon,
-        link: "/"
+        link: "/dashboard"
     },
     {
         id: "asset",
