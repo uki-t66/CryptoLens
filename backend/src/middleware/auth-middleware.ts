@@ -8,19 +8,20 @@ export interface AuthRequest extends Request {
     };
 }
 
-export const authMiddleware = async (
+export const authMiddleware = (
     req: AuthRequest,
     res: Response,
     next: NextFunction
-) => {
+): void => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
+        const token = req.cookies.jwt;
         
         if (!token) {
-            return res.status(401).json({
+            res.status(401).json({
                 success: false,
                 message: '認証トークンが必要です'
             });
+            return;
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
@@ -31,9 +32,9 @@ export const authMiddleware = async (
         req.user = decoded;
         next();
     } catch (error) {
-        return res.status(401).json({
+        res.status(401).json({
             success: false,
-            message: '無効または期限切れのトークンです'
+            message: '無効なトークンです'
         });
     }
 };

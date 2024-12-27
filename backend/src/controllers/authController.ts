@@ -46,7 +46,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             'INSERT INTO users (email, password) VALUES (?, ?)',
             [email, hashedPassword]
         );
-
+        // MySQLの AUTO_INCREMENT で生成されたPK(id)を取得
         const userId = (result as any).insertId;
 
         // JWTトークンの生成

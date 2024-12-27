@@ -13,10 +13,15 @@ import { useState, useEffect, useRef } from 'react';
 
 const COINGECKO_API = import.meta.env.VITE_COINGECKO_API;
 const ExchangeRate_API = import.meta.env.VITE_ExchangeRate_API;
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 // AddTxコンポーネント
-export const AddTx = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
+export const AddTx = ({ open, onClose, onSuccess }: { 
+  open: boolean; 
+  onClose: () => void
+  onSuccess: () => Promise<void>;
+}) => {
 
   const [searchTerm, setSearchTerm] = useState(''); // 検索入力値
   const [suggestions, setSuggestions] = useState<Coin[]>([]); // 検索候補
@@ -27,7 +32,6 @@ export const AddTx = ({ open, onClose }: { open: boolean; onClose: () => void })
   const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null); //Inputで選択されたSymbol
   const [exchangeRate,setExchangeRate] = useState(""); //USD/JPYのレートを管理
   const [transactionTypeData, setTransactionTypeData] = useState<string>(''); //選択したTxTypeを管理
-  const [blockchainData, setBlockchainData] = useState<string>(''); //選択したblockchainを管理
   const [price, setPrice] = useState<string>(''); // COINGECKOから取得した価格
 
   // fetchしたデータの型定義
@@ -176,7 +180,7 @@ const fetchHistoricalPrice = async (coinId: string, date: string) => {
     // レスポンスから価格を取得して状態を更新
     if (data.market_data?.current_price?.usd) {
       // 小数点第二位までを価格表示する
-      const formattedPrice = Number(data.market_data.current_price.usd).toFixed(2);
+      const formattedPrice = Number(data.market_data.current_price.usd).toFixed(5);
       setPrice(formattedPrice);
     } else {
       alert('この日付の価格データは利用できません。');
@@ -248,17 +252,18 @@ const handleSubmit = async (e: React.FormEvent) => {
       price: price,
       amount: (e.target as HTMLFormElement).amount.value,
       fee: (e.target as HTMLFormElement).fee.value,
-      blockchain: blockchainData,
+      blockchain: (e.target as HTMLFormElement).blockchain.value,
       exchangeRate: exchangeRate,
       transactionId: (e.target as HTMLFormElement).txid.value || undefined
     };
 
     // POSTリクエストの送信
-    const response = await fetch('http://localhost:8000/transaction', {
+    const response = await fetch(`${API_URL}/transactions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include', // JWT cookieを自動送信
       body: JSON.stringify(formData)
     });
 
@@ -269,6 +274,9 @@ const handleSubmit = async (e: React.FormEvent) => {
     const result = await response.json();
     console.log('Transaction submitted:', result);
     alert('Transaction added successfully!');
+
+    // AddTxをsubmitした際にTxHistoryのfetchTransactionsが実行される
+    await onSuccess();
     onClose();
 
   } catch (error) {
@@ -297,6 +305,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleDateChange}
                 className="bg-gray-700 text-white border-gray-600" 
                 style={{ WebkitAppearance: 'none', colorScheme: 'dark' }}
+                required
               />
             </div>
 
@@ -310,6 +319,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   id="exchange" 
                   className=" bg-gray-700 text-white border-gray-600"
                   placeholder="Enter cryptocurrency exchange ..." 
+                  required
                 />
               </div>
             </div>
@@ -317,7 +327,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             {/* Transaction Type */}
             <div className="space-y-2">
               <Label htmlFor="txType" className="text-white">Transaction Type</Label>
-              <Select onValueChange={setTransactionTypeData}>
+              <Select onValueChange={setTransactionTypeData}  required>
                 <SelectTrigger className="bg-gray-700 text-white border-gray-600">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -341,6 +351,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   onChange={handleInputChange}
                   placeholder="Search cryptocurrency ..."
                   className="bg-gray-700 text-white border-gray-600"
+                  required
                 />
                 
                 {/* 通貨検索(fetch)完了まで表示されるロード画面 */}
@@ -399,7 +410,8 @@ const handleSubmit = async (e: React.FormEvent) => {
               <Input 
                 type="number" 
                 id="amount" 
-                className="bg-gray-700 text-white border-gray-600" 
+                className="bg-gray-700 text-white border-gray-600"
+                required
               />
             </div>
 
@@ -413,38 +425,24 @@ const handleSubmit = async (e: React.FormEvent) => {
                   id="fee" 
                   className="pl-6 bg-gray-700 text-white border-gray-600" 
                   placeholder="0.00"
+                  required
                 />
               </div>
             </div>
 
             {/* Blockchain */}
             <div className="space-y-2">
-              <Label htmlFor="blockchain" className="text-white">Blockchain</Label>
-              <Select onValueChange={setBlockchainData}>
-                <SelectTrigger className="bg-gray-700 text-white border-gray-600">
-                  <SelectValue placeholder="Select blockchain" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Bitcoin">Bitcoin</SelectItem>
-                  <SelectItem value="Ethereum">Ethereum</SelectItem>
-                  <SelectItem value="Solana">Solana</SelectItem>
-                  <SelectItem value="Tron">TRON</SelectItem>
-                  <SelectItem value="BSC">BNB Smart Chain</SelectItem>
-                  <SelectItem value="Base">Base</SelectItem>
-                  <SelectItem value="Arbitrum">Arbitrum</SelectItem>
-                  <SelectItem value="Sui">Sui</SelectItem>
-                  <SelectItem value="Avalanche">Avalanche</SelectItem>
-                  <SelectItem value="Hyperliquid">Hyperliquid</SelectItem>
-                  <SelectItem value="Aptos">Aptos</SelectItem>
-                  <SelectItem value="Polygon">Polygon</SelectItem>
-                  <SelectItem value="Optimism">Optimism</SelectItem>
-                  <SelectItem value="Sei">Sei</SelectItem>
-                  <SelectItem value="Zksync">Zksync</SelectItem>
-                  <SelectItem value="Starknet">StarkNet</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="blockchain" className="text-white">BlockChain</Label>
+              <div className="relative">
+                <Input 
+                  type="text" 
+                  id="blockchain" 
+                  className=" bg-gray-700 text-white border-gray-600"
+                  placeholder="Enter BlockChain..." 
+                  required
+                />
+              </div>
             </div>
-
             {/* USD / JPY */}
             <div className="space-y-2">
               <Label htmlFor="exchange-rate" className="text-white">USD / JPY ( Enter Date )</Label>
