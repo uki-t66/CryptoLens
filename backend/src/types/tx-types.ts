@@ -1,5 +1,7 @@
+import { RowDataPacket, ResultSetHeader } from 'mysql2';
+
 // フロントエンドのAddTxからsubmitされるformの型
-export interface TransactionForm {
+export interface TransactionRow extends RowDataPacket {
     id: number;
     date: string;
     exchange: string;
@@ -10,5 +12,11 @@ export interface TransactionForm {
     fee: string;
     blockchain: string;
     exchangeRate: string;
-    transactionId?: string;
+    tx_hash?: string;
   }
+
+
+// 総件数取得用のインターフェース
+export interface TotalCountRow extends RowDataPacket {
+  total: number;
+}
