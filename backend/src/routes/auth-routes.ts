@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, verifyAuth } from '../controllers/authController';
+import { register, login, verifyAuth } from '../controllers/auth-controller';
 
 const router = Router();  // Routerのインスタンスを作成
 

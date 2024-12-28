@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRoutes from './routes/authRoutes';
+import authRoutes from './routes/auth-routes';
 import cookieParser from 'cookie-parser';
 import txRoutes from './routes/tx-routes';
 
