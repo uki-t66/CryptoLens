@@ -67,7 +67,7 @@ const App = () => {
             element={
               <AuthGuard>
                 <div className="fixed flex w-full h-full">
-                  <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-64' : 'w-16'}`}>
+                  <nav className={`bg-gray-800 border border-gray-700 shrink-0 transition-[width] duration-350 ${isSidebarOpen ? 'w-64' : 'w-16'}`}>
                     <Sidebar 
                       isOpen={isSidebarOpen}
                       onToggle={toggleSidebar}

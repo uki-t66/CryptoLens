@@ -53,7 +53,7 @@ export const AddTx = ({ open, onClose, onSuccess }: {
     fee: string;
     blockchain: string;
     exchangeRate: string;
-    transactionId?: string;
+    tx_hash?: string;
   }
 
   // TransactionフォームのAsset(Symbol)の入力値をcoingecko_apiを使用して検索し、通貨名を統一させる
@@ -254,7 +254,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       fee: (e.target as HTMLFormElement).fee.value,
       blockchain: (e.target as HTMLFormElement).blockchain.value,
       exchangeRate: exchangeRate,
-      transactionId: (e.target as HTMLFormElement).txid.value || undefined
+      tx_hash: (e.target as HTMLFormElement).tx_hash.value || undefined
     };
 
     // POSTリクエストの送信
@@ -466,9 +466,9 @@ const handleSubmit = async (e: React.FormEvent) => {
 
             {/* Transaction ID */}
             <div className="space-y-2 md:col-span-2 lg:col-span-3">
-              <Label htmlFor="txid" className="text-white">Transaction ID (Optional)</Label>
+              <Label htmlFor="tx_hash" className="text-white">Transaction ID (Optional)</Label>
               <Input 
-                id="txid" 
+                id="tx_hash" 
                 className="bg-gray-700 text-white border-gray-600" 
               />
             </div>
