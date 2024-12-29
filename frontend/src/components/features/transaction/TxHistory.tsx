@@ -187,7 +187,7 @@ export const TxHistory = () => {
                            <TableHead className="text-gray-200 font-medium text-right">Fee</TableHead>
                            <TableHead className="text-gray-200 font-medium text-right">Total</TableHead>
                            <TableHead className="text-gray-200 font-medium text-right">Chain</TableHead>
-                           <TableHead className="text-gray-200 font-medium text-right">Rate</TableHead>
+                           <TableHead className="text-gray-200 font-medium text-right">USD/JPY</TableHead>
                            <TableHead className="text-gray-200 font-medium">Hash</TableHead>
                         </TableRow>
                     </TableHeader>
