@@ -66,6 +66,7 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
             'SELECT COUNT(*) as total FROM transactions WHERE user_id = ?',
             [req.user?.id]
         );
+        console.log(totalRows)
 
         // トランザクションデータを取得
         const [transactions] = await pool.execute<TransactionRow[]>(
@@ -75,6 +76,7 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
              LIMIT ?, ?`,
             [req.user?.id, offset.toString(), limit.toString()]
         );
+        console.log(transactions)
 
         res.json({
             transactions,
