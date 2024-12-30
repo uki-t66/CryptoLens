@@ -1,5 +1,5 @@
 import express from 'express';
-import { createTransaction, getTransactions } from '../controllers/tx-controllers';
+import { createTransaction, getTransactions } from '../controllers/tx-controller';
 import { authMiddleware } from '../middleware/auth-middleware';
 
 const router = express.Router();
