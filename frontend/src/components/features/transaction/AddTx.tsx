@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -18,6 +19,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 // AddTxコンポーネント
 export const AddTx = ({ open, onClose, onSuccess }: { 
+  // TxHistoryのprops
   open: boolean; 
   onClose: () => void
   onSuccess: () => Promise<void>;
@@ -290,6 +292,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       <DialogContent className="bg-gray-800 text-white border-gray-700 max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Add New Transaction</DialogTitle>
+          <DialogDescription>
+            Please update the transaction details below.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -411,6 +416,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 type="number" 
                 id="amount" 
                 className="bg-gray-700 text-white border-gray-600"
+                step="any"
                 required
               />
             </div>
