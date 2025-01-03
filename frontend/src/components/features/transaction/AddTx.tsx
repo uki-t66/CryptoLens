@@ -485,7 +485,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               type="button" 
               variant="outline" 
               onClick={onClose}
-              className="bg-gray-700 text-white hover:bg-gray-600 hover:text-gray-200"
+              className="bg-gray-200 text-gray-700 hover:bg-gray-300"
             >
               Cancel
             </Button>

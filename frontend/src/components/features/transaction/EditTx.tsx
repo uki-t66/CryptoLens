@@ -127,7 +127,7 @@ export const EditTx = ({ tx, fetchTransactions }: EditTxProps) => {
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="bg-gray-300 text-black hover:bg-gray-400"
+              className="bg-gray-200 text-gray-700 hover:bg-gray-300"
             >
               Cancel
             </Button>
@@ -148,7 +148,7 @@ export const EditTx = ({ tx, fetchTransactions }: EditTxProps) => {
             className="bg-red-600 text-white hover:bg-red-700"
           >
             <TrashIcon className="mr-2 h-4 w-4" />
-            Delete
+            Delete this transaction record
           </Button>
         </div>
       </DialogContent>
