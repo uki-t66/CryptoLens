@@ -55,6 +55,7 @@ export const createTransaction = async (
   }
 };
 
+// フロントエンドに表示するtransactionレコードを取得する関数
 export const getTransactions = async (req: AuthRequest, res: Response) => {
     try {
         const page = parseInt(req.query.page as string) || 1;
@@ -66,7 +67,6 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
             'SELECT COUNT(*) as total FROM transactions WHERE user_id = ?',
             [req.user?.id]
         );
-        console.log(totalRows)
 
         // トランザクションデータを取得
         const [transactions] = await pool.execute<TransactionRow[]>(
@@ -76,7 +76,6 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
              LIMIT ?, ?`,
             [req.user?.id, offset.toString(), limit.toString()]
         );
-        console.log(transactions)
 
         res.json({
             transactions,
@@ -85,5 +84,44 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('Error fetching transactions:', error);
         res.status(500).json({ error: 'Failed to fetch transactions' });
+    }
+};
+
+// 削除エンドポイント
+export const deleteTransaction = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.id;
+
+        await pool.execute(
+            'DELETE FROM transactions WHERE transaction_id = ? AND user_id = ?',
+            [id, userId]
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting transaction:', error);
+        res.status(500).json({ error: 'Failed to delete transaction' });
+    }
+};
+
+// 更新エンドポイント
+export const updateTransaction = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.id;
+        const transaction = req.body;
+
+        await pool.execute(
+            `UPDATE transactions 
+             SET price = ?, amount = ?, fee = ?
+             WHERE transaction_id = ? AND user_id = ?`,
+            [transaction.price, transaction.amount, transaction.fee, id, userId]
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating transaction:', error);
+        res.status(500).json({ error: 'Failed to update transaction' });
     }
 };
