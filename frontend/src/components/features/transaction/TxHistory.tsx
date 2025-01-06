@@ -74,6 +74,9 @@ import {
         const data = await response.json()
         setTransactions(data.transactions)
         setTotalPages(Math.ceil(data.total / itemsPerPage))
+
+        // トランザクション取得後にカスタムイベントを発火(AssetFieldコンポーネントを更新させるため。)
+        window.dispatchEvent(new Event("transactionsChanged"));
       } catch (error) {
         console.error("Failed to fetch transactions:", error)
       }
