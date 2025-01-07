@@ -48,6 +48,7 @@ export const AddTx = ({
     blockchain: string;
     exchangeRate: string;
     tx_hash?: string;
+    coin_id?: string
   }
 
 
@@ -63,13 +64,13 @@ export const AddTx = ({
   const [exchangeRate, setExchangeRate] = useState("");  // USD/JPYのレート
   const [transactionTypeData, setTransactionTypeData] = useState<string>(''); //選択したTxType
   const [price, setPrice] = useState<string>('');        // COINGECKOから取得した価格
+  const [coingeckoId, setCoingeckoId] = useState<string>(""); //COINGECKOのcoin.idを格納
 
   // 価格を手動入力できるかどうかを管理するstate
   const [isManualMode, setIsManualMode] = useState(false);
 
-  // --------------------
+  
   // コイン検索 (Coingecko)
-  // --------------------
   const searchCrypto = async (query: string | number) => {
     if (!query) {
       setSuggestions([]);
@@ -128,12 +129,13 @@ export const AddTx = ({
   const handleSuggestionClick = (coin: Coin) => {
     setSearchTerm(coin.symbol);
     setSelectedCoin(coin);
+    setCoingeckoId(coin.id);
     setSuggestions([]);
     setShowSuggestions(false);
 
     // 日付が選択済みなら価格を取得
     if (selectedDate) {
-      fetchHistoricalPrice(coin.id, selectedDate);
+      fetchHistoricalPrice(coingeckoId, selectedDate);
     }
   };
 
@@ -168,30 +170,10 @@ export const AddTx = ({
   }
 
   
-  // 日付が1年以上前かどうかを判定する関数
-  const isOverOneYear = (dateString: string): boolean => {
-    const targetDate = new Date(dateString);
-
-    // 1年前の日付を作成
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-    // targetDate が 1年前より過去なら true
-    return targetDate < oneYearAgo;
-  };
-
-  
   // COINGECKOから指定された日付の通貨価格を取得する関数
   const fetchHistoricalPrice = async (coinId: string, date: string) => {
     try {
-      // まず1年以上前の場合は、API 取得をせずに手動入力を促す
-      if (isOverOneYear(date)) {
-        alert('この日付の価格データは利用できません。1年以上前のデータは "Manual mode" で入力してください。');
-        setPrice('');
-        setExchangeRate("");
-        setIsManualMode(true); // 手動で価格を入力できるようにする
-        return;
-      }
+  
 
       // ローディング開始
       setIsLoading(true);
@@ -214,11 +196,12 @@ export const AddTx = ({
       } else {
         alert('この日付の価格データは利用できません。手動で入力してください。');
         setPrice('');
-        setIsManualMode(true);
+        setExchangeRate("");
+        setIsManualMode(true); // 手動で価格を入力できるようにする
       }
     } catch (error) {
       console.error('価格の取得に失敗:', error);
-      alert('価格の取得に失敗しました。しばらくしてから再試行してください。');
+      alert('この日付の価格データは利用できません。1年以上前のデータは "Manual mode" で入力してください。');
       setPrice('');
       setIsManualMode(true);
     } finally {
@@ -289,7 +272,8 @@ export const AddTx = ({
         fee: (e.target as HTMLFormElement).fee.value,
         blockchain: (e.target as HTMLFormElement).blockchain.value,
         exchangeRate: exchangeRate,
-        tx_hash: (e.target as HTMLFormElement).tx_hash.value || undefined
+        tx_hash: (e.target as HTMLFormElement).tx_hash.value || undefined,
+        coin_id: coingeckoId || undefined
       };
 
       // POSTリクエストの送信
@@ -468,7 +452,7 @@ export const AddTx = ({
                   // ★ isPriceEditable が false の場合に readOnly
                   readOnly={!isManualMode}
                   className={`pl-6 bg-gray-700 text-white border-gray-600 ${
-                    isManualMode ? 'text-green-400' : 'text-blue-400 cursor-not-allowed'
+                    isManualMode ? '' : ' cursor-not-allowed'
                   }`}
                   placeholder="0.00"
                   // 手動入力できるようになったら必須にする(お好みで)
