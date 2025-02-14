@@ -14,6 +14,7 @@ export const authMiddleware = (
     next: NextFunction
 ): void => {
     try {
+        // cookieにあるjwtをtokenに格納
         const token = req.cookies.jwt;
         
         if (!token) {
@@ -30,6 +31,7 @@ export const authMiddleware = (
         };
 
         req.user = decoded;
+        console.log(req.user)
         next();
     } catch (error) {
         res.status(401).json({

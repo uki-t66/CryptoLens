@@ -20,8 +20,8 @@ import {
   import { AddTx } from "./AddTx"
   import { useCallback, useEffect, useState } from "react"
   import { TransactionData } from "@/types/transaction-types"
-  
-  import { EditTx } from "./EditTx"  // <-- ここでimportする
+  import { TxDetailModal } from "./TxDetailModal"
+  import { toast as hotToast } from "react-hot-toast"
   
   
   const API_URL = import.meta.env.VITE_API_URL
@@ -30,10 +30,36 @@ import {
     
   
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false) // 「+」で開くAddTx用
-    const [transactions, setTransactions] = useState<TransactionData[]>([])
+    const [transactions, setTransactions] = useState<TransactionData[]>([]) //fetchしたtxデータ
+
     const [currentPage, setCurrentPage] = useState<number>(1)
     const [totalPages, setTotalPages] = useState<number>(0)
     const itemsPerPage = 10
+
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+    const [selectedTransaction, setSelectedTransaction] = useState<TransactionData | null>(null)
+
+
+    const formatCryptoPrice = (price: number): number => {
+      const value = Number(price);
+    
+      if (value < 0.01) {
+        return Number(value.toFixed(8));      // 0.00001234
+      } else if (value < 1) {
+        return Number(value.toFixed(6));      // 0.123456
+      } else if (value < 100) {
+        return Number(value.toFixed(4));      // 12.3456
+      } else  {
+        return Number(value.toFixed(3));      // 123.453
+      }
+    };
+
+
+    // Tableのレコードクリック時に発火する関数
+    const handleRowClick = (tx: TransactionData) => {
+      setSelectedTransaction(tx)
+      setIsDetailModalOpen(true)
+    }
   
     // クリップボードへコピー
     const handleCopy = async (hash: string) => {
@@ -63,21 +89,34 @@ import {
         })
       }
     }
+
+   
   
     // 取引履歴を取得
     const fetchTransactions = useCallback(async () => {
-      try {
-        const response = await fetch(
-          `${API_URL}/transactions?page=${currentPage}&limit=${itemsPerPage}`,
-          { credentials: "include" }
-        )
-        const data = await response.json()
-        setTransactions(data.transactions)
-        setTotalPages(Math.ceil(data.total / itemsPerPage))
-      } catch (error) {
-        console.error("Failed to fetch transactions:", error)
-      }
-    }, [currentPage, itemsPerPage])
+       hotToast.promise(
+        (async () => {
+          const response = await fetch(
+            `${API_URL}/transactions?page=${currentPage}&limit=${itemsPerPage}`,
+            { credentials: "include" }
+          );
+    
+          if (!response.ok) {
+            throw new Error('Failed to fetch transactions');
+          }
+    
+          const data = await response.json();
+          setTransactions(data.transactions);
+          setTotalPages(Math.ceil(data.total / itemsPerPage));
+          window.dispatchEvent(new Event("transactionsChanged"));
+        })(),
+        {
+          loading: '取引履歴を取得中...',
+          success: <b>取引履歴を更新しました。</b>,
+          error: <b>取引履歴の取得に失敗しました。</b>,
+        }
+      );
+    }, [currentPage, itemsPerPage]);
   
     useEffect(() => {
       fetchTransactions()
@@ -104,7 +143,9 @@ import {
                           setCurrentPage((prev) => prev - 1)
                         }
                       }}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      className={`text-white
+                          ${currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                        }`}
                     />
                   </PaginationItem>
   
@@ -175,18 +216,26 @@ import {
                 <TableHead className="text-gray-200 font-medium text-right w-[100px]">Chain</TableHead>
                 <TableHead className="text-gray-200 font-medium text-right w-[100px]">USD/JPY</TableHead>
                 <TableHead className="text-gray-200 font-medium w-[100px]">Hash</TableHead>
-                <TableHead className="w-[50px]"> </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="overflow-auto">
               {transactions.map((tx) => (
-                <TableRow key={tx.transaction_id} className="border-b border-gray-700">
+                <TableRow 
+                  key={tx.transaction_id}
+                  className="border-b border-gray-700 cursor-pointer hover:bg-gray-900 transition-colors"
+                  onClick={() => handleRowClick(tx)}
+                >
+                  {/* 日付 */}
                   <TableCell className="font-medium text-gray-200">
                     {new Date(tx.date).toLocaleDateString()}
                   </TableCell>
+
+                  {/* 取引所 */}
                   <TableCell className="text-right font-medium text-gray-200">
                     {tx.exchange}
                   </TableCell>
+
+                  {/* 取引種類 */}
                   <TableCell
                     className={`
                       ${tx.transaction_type === "Buy" && "text-green-400"}
@@ -197,50 +246,55 @@ import {
                   >
                     {tx.transaction_type}
                   </TableCell>
+
+                  {/* 通貨 */}
                   <TableCell className="font-medium text-gray-200 text-right">{tx.asset}</TableCell>
+
+                  {/* 通貨価格 */}
                   <TableCell className="text-right">
-                    $
-                    {Number(tx.price).toLocaleString(undefined, {
-                        // priceが$10以下の場合、小数点4桁まで表示
-                      minimumFractionDigits: Number(tx.price) < 10 ? 4 : 2,
-                      maximumFractionDigits: Number(tx.price) < 10 ? 4 : 2,
-                    })}
+                    ${ formatCryptoPrice(Number(tx.price))}
                   </TableCell>
+
+                  {/* 数量 */}
                   <TableCell className="text-right">{Number(tx.amount)}</TableCell>
+
+                  {/* 手数料 */}
                   <TableCell className="text-right">${Number(tx.fee)}</TableCell>
+
+                  {/* 合計 */}
                   <TableCell className="text-right">
                     $
-                    {(
-                      Number(tx.price) * Number(tx.amount)
-                    ).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    { formatCryptoPrice(Number(tx.price) * Number(tx.amount) - Number(tx.fee)).toLocaleString() }
                   </TableCell>
+
+                  {/* BlockCain */}
                   <TableCell className="text-right font-medium text-gray-200">
                     {tx.blockchain}
                   </TableCell>
+
+                  {/* 為替 */}
                   <TableCell className="text-right font-medium text-gray-200">
                     ¥{tx.exchange_rate}
                   </TableCell>
+
+                  {/* Tx_hash */}
                   <TableCell>
-                    <div className="w-[78px] overflow-hidden group">
+                    <div className="overflow-hidden group">
                       <div
                         className="overflow-x-auto whitespace-nowrap text-gray-400 cursor-pointer group-hover:text-gray-200 transition-colors"
-                        onClick={() => tx.tx_hash && handleCopy(tx.tx_hash)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (tx.tx_hash) {
+                            handleCopy(tx.tx_hash)
+                          }
+                        }}
                         title="Click to copy"
                       >
                         {tx.tx_hash}
                       </div>
                     </div>
                   </TableCell>
-                  {/* EditTx コンポーネントを呼び出し (モーダル+フォーム+削除) */}
-                  <TableCell>
-                    <EditTx
-                      tx={tx}
-                      fetchTransactions={fetchTransactions}
-                    />
-                  </TableCell>
+
                 </TableRow>
               ))}
             </TableBody>
@@ -252,6 +306,16 @@ import {
             onClose={() => setIsModalOpen(false)}
             onSuccess={fetchTransactions}
           />
+
+          {/* 詳細モーダル (TxDetailModal) */}
+          {selectedTransaction && (
+            <TxDetailModal
+              isOpen={isDetailModalOpen}
+              onClose={() => setIsDetailModalOpen(false)}
+              transaction={selectedTransaction}
+              fetchTransactions={fetchTransactions}
+            />
+          )}
         </div>
       </div>
     )
