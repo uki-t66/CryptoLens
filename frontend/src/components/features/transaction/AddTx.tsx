@@ -9,13 +9,16 @@ import {
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Edit2, RefreshCw } from "lucide-react";
+import { Edit2, RefreshCw } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react'
+import { Textarea } from "@/components/ui/textarea"
+import toast from "react-hot-toast"
 
-const COINGECKO_API = import.meta.env.VITE_COINGECKO_API;
-const ExchangeRate_API = import.meta.env.VITE_ExchangeRate_API;
-const API_URL = import.meta.env.VITE_API_URL;
+
+const COINGECKO_API = import.meta.env.VITE_COINGECKO_API
+const ExchangeRate_API = import.meta.env.VITE_ExchangeRate_API
+const API_URL = import.meta.env.VITE_API_URL
 
 // AddTxコンポーネント
 export const AddTx = ({ 
@@ -28,290 +31,280 @@ export const AddTx = ({
   onSuccess: () => Promise<void>;
 }) => {
 
-  // fetchしたデータの型定義
+  // coingeckoからfetchした通貨データの型定義
   interface Coin {
     id: string;
     symbol: string;
     name: string;
     thumb: string;
   }
-  
-  // submitするformのdataの型定義
-  interface TransactionForm {
-    date: string;
-    exchange: string;
-    transactionType: string;
-    asset: string;
-    price: string;
-    amount: string;
-    fee: string;
-    blockchain: string;
-    exchangeRate: string;
-    tx_hash?: string;
-    coin_id?: string
+
+  const [searchTerm, setSearchTerm] = useState('')         
+  const [suggestions, setSuggestions] = useState<Coin[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null)
+
+  const [selectedDate, setSelectedDate] = useState<string>('')
+  const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null)
+  const [exchangeRate, setExchangeRate] = useState("")
+  const [transactionTypeData, setTransactionTypeData] = useState<string>('')
+  const [price, setPrice] = useState<string>('')
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [coingeckoId, setCoingeckoId] = useState<string>("")
+  const [isManualMode, setIsManualMode] = useState(false)
+
+
+  // 添付可能なファイル
+  const allowedMimeTypes = [
+    "application/pdf",
+    "application/msword", // .doc
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+    "text/plain", // .txt
+    "image/jpeg", // .jpg, .jpeg
+    "image/png", // .png
+  ];
+
+  // --- イベントやロジック関数 ---
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value
+    setSelectedDate(newDate)
+    fetchExchangeRate(newDate)
+
+    if (selectedCoin) {
+      fetchHistoricalPrice(selectedCoin.id, newDate)
+    }
   }
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchTerm(value)
+    setShowSuggestions(true)
 
-  const [searchTerm, setSearchTerm] = useState('');         // 検索入力値
-  const [suggestions, setSuggestions] = useState<Coin[]>([]); // 検索候補
-  const [isLoading, setIsLoading] = useState(false);        // ローディング状態
-  const [showSuggestions, setShowSuggestions] = useState(false); // 候補表示制御
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);   // デバウンス用のタイマー参照
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current)
+    debounceTimeout.current = setTimeout(() => {
+      searchCrypto(value)
+    }, 400)
+  }
 
-  const [selectedDate, setSelectedDate] = useState<string>('');  // Inputで選択された日付
-  const [selectedCoin, setSelectedCoin] = useState<Coin | null>(null); // 選択されたSymbol
-
-  const [exchangeRate, setExchangeRate] = useState("");  // USD/JPYのレート
-  const [transactionTypeData, setTransactionTypeData] = useState<string>(''); //選択したTxType
-  const [price, setPrice] = useState<string>('');        // COINGECKOから取得した価格
-  const [coingeckoId, setCoingeckoId] = useState<string>(""); //COINGECKOのcoin.idを格納
-
-  // 価格を手動入力できるかどうかを管理するstate
-  const [isManualMode, setIsManualMode] = useState(false);
-
-  
-  // コイン検索 (Coingecko)
-  const searchCrypto = async (query: string | number) => {
+  // Coingecko APIでコインを検索
+  const searchCrypto = async (query: string) => {
     if (!query) {
-      setSuggestions([]);
-      return;
+      setSuggestions([])
+      return
     }
-
     try {
-      // 検索時のローディング開始
-      setIsLoading(true);
-
-      const response = await fetch(
-        `${COINGECKO_API}/search?query=${query}`
-      );
-      const data = await response.json();
-
-      // data(res)のインデックス0~4の配列をcoinsに格納
+      setIsLoading(true)
+      const response = await fetch(`${COINGECKO_API}/search?query=${query}`)
+      const data = await response.json()
       const coins: Coin[] = data.coins.slice(0, 5).map((coin: Coin) => ({
         id: coin.id,
         symbol: coin.symbol.toUpperCase(),
         name: coin.name,
         thumb: coin.thumb
-      }));
-
-      // 検索候補になるデータをsetSuggestionsで管理
-      setSuggestions(coins);
+      }))
+      setSuggestions(coins)
     } catch (error) {
-      console.error('データの取得に失敗:', error);
-      alert('データの取得に失敗しました。しばらくしてから再試行してください。');
-      setSuggestions([]);
+      console.error('データの取得に失敗:', error)
+      toast.error('データの取得に失敗しました。しばらくしてから再試行してください。',{
+        duration: 6000,
+        position: 'top-right',
+      });
+      setSuggestions([])
     } finally {
-      // 検索のローディング終了
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  
-  // Coin 検索Input 変更ハンドラ
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    setShowSuggestions(true);
-
-    // すでにタイマーが設定されている場合はキャンセル
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-    }
-
-    // 300ミリ秒後に検索を実行 (デバウンス)
-    debounceTimeout.current = setTimeout(() => {
-      searchCrypto(value);
-    }, 300);
-  };
-
-  
   // 検索候補クリック時
   const handleSuggestionClick = (coin: Coin) => {
-    setSearchTerm(coin.symbol);
-    setSelectedCoin(coin);
-    setCoingeckoId(coin.id);
-    setSuggestions([]);
-    setShowSuggestions(false);
-
-    // 日付が選択済みなら価格を取得
+    setSearchTerm(coin.symbol)
+    setSelectedCoin(coin)
+    setCoingeckoId(coin.id)
+    setSuggestions([])
+    setShowSuggestions(false)
     if (selectedDate) {
-      fetchHistoricalPrice(coingeckoId, selectedDate);
+      fetchHistoricalPrice(coin.id, selectedDate)
     }
-  };
+  }
 
-  
-  // コンポーネントのクリーンアップ
+  // 過去日時のコイン価格を取得
+  const fetchHistoricalPrice = async (coinId: string, date: string) => {
+    try {
+      setIsLoading(true)
+      setIsManualMode(false) // Autoモードに戻す
+
+      const [year, month, day] = date.split('-')
+      const formattedDate = `${day}-${month}-${year}`
+      const response = await fetch(
+        `${COINGECKO_API}/coins/${coinId}/history?date=${formattedDate}`
+      )
+      const data = await response.json()
+
+      if (data.market_data?.current_price?.usd) {
+        const formattedPrice = Number(data.market_data.current_price.usd).toFixed(5)
+        setPrice(formattedPrice)
+      } else {
+        toast.error('この日付の価格データは利用できません。手動入力(Manual mode)に切り替えます。',{
+          duration: 9000,
+          position: 'top-right',
+        });
+        setPrice('')
+        setExchangeRate("")
+        setIsManualMode(true)
+      }
+    } catch (error) {
+      console.error('価格の取得に失敗:', error)
+      toast.error('古い日付は価格が取れない場合があります。手動入力に切り替えます。',{
+        duration: 9000,
+        position: 'top-right',
+      });
+      setPrice('')
+      setIsManualMode(true)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 為替レートを取得 (USD / JPY)
+  const fetchExchangeRate = async (date: string) => {
+    if (isManualMode) {
+      return setExchangeRate("")
+    }
+    try {
+      setIsLoading(true)
+      const response = await fetch(
+        `${ExchangeRate_API}/${date}?from=USD&to=JPY`
+      )
+      const data = await response.json()
+      if (data.rates?.JPY) {
+        const formattedRate = Number(data.rates.JPY).toFixed(2)
+        setExchangeRate(formattedRate)
+      } else {
+        toast.error('この日付の為替レートがありません',{
+          duration: 7000,
+          position: 'top-right',
+        });
+        setExchangeRate("")
+      }
+    } catch (error) {
+      console.error('為替レートの取得に失敗:', error)
+      toast.error('為替レートの取得に失敗しました',{
+        duration: 7000,
+        position: 'top-right',
+      });
+      setExchangeRate("")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 表示切替(Manual or Auto)
+  const changeInputMode = () => {
+    setIsManualMode(!isManualMode)
+  }
+
+  // アンマウント時のデバウンスキャンセル
   useEffect(() => {
-    // コンポーネントのアンマウント時に実行
     return () => {
       if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
+        clearTimeout(debounceTimeout.current)
       }
-    };
-  }, []);
+    }
+  }, [])
 
-  
-  // 検索ボックス外のクリック検知
+  // 画面外クリックで検索候補を閉じる
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (!(e.target as Element).closest('.crypto-search-container')) {
-        setShowSuggestions(false);
+        setShowSuggestions(false)
       }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
+    }
+    document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
-  // inputの自動、手動入力を切り替える関数
-  const changeInputMode = () => {
-    setIsManualMode(!isManualMode);
-  }
 
-  
-  // COINGECKOから指定された日付の通貨価格を取得する関数
-  const fetchHistoricalPrice = async (coinId: string, date: string) => {
-    try {
-  
+  // 添付したファイルが許可されているか確認して、画面に表示させる関数。  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
 
-      // ローディング開始
-      setIsLoading(true);
-      setIsManualMode(false); // API取得モードに戻す(Auto mode)
-
-      // 日付のフォーマット(YYYY-MM-DD → DD-MM-YYYY)
-      const [year, month, day] = date.split('-');
-      const formattedDate = `${day}-${month}-${year}`;
-
-      // Coingecko API へリクエスト
-      const response = await fetch(
-        `${COINGECKO_API}/coins/${coinId}/history?date=${formattedDate}`
-      );
-      const data = await response.json();
-
-      // レスポンスから価格を取得して状態を更新
-      if (data.market_data?.current_price?.usd) {
-        const formattedPrice = Number(data.market_data.current_price.usd).toFixed(5);
-        setPrice(formattedPrice);
-      } else {
-        alert('この日付の価格データは利用できません。手動で入力してください。');
-        setPrice('');
-        setExchangeRate("");
-        setIsManualMode(true); // 手動で価格を入力できるようにする
+    if (file) {
+      if (!allowedMimeTypes.includes(file.type)) {
+        toast.error("許可されていないファイル形式です！",{
+          duration: 7000,
+          position: 'top-right',
+        });
+        event.target.value = ""; // ファイル選択をリセット
+        setFileName(null);
+        return;
       }
-    } catch (error) {
-      console.error('価格の取得に失敗:', error);
-      alert('この日付の価格データは利用できません。1年以上前のデータは "Manual mode" で入力してください。');
-      setPrice('');
-      setIsManualMode(true);
-    } finally {
-      setIsLoading(false);
+
+      setFileName(file.name);
     }
   };
-
   
-  // 日付入力ハンドラ
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = e.target.value;
-    setSelectedDate(newDate);
 
-    // 為替レートを取得
-    fetchExchangeRate(newDate);
-
-    // アセットが選択済みの場合のみ価格を取得
-    if (selectedCoin) {
-      fetchHistoricalPrice(selectedCoin.id, newDate);
-    }
-  };
-
-
-  // 為替レートを取得
-  const fetchExchangeRate = async (date: string) => {
-
-    if(isManualMode){
-      return setExchangeRate("");
-    }
+  // バックエンドにformをsubmit
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
 
     try {
-      setIsLoading(true);
-      const response = await fetch(
-        `${ExchangeRate_API}/${date}?from=USD&to=JPY`
-      );
-      const data = await response.json();
+      // フォーム要素全体から FormData を作成
+      const formData = new FormData(e.currentTarget)
 
-      if (data.rates?.JPY) {
-        const formattedRate = Number(data.rates.JPY).toFixed(2);
-        setExchangeRate(formattedRate);
-      } else {
-        alert('この日付の為替レートデータは利用できません。');
-        setExchangeRate("");
+      formData.set("date", selectedDate)
+      formData.set("transactionType", transactionTypeData)
+      formData.set("asset", searchTerm)
+      formData.set("price", price)
+      formData.set("exchangeRate", exchangeRate)
+      if (coingeckoId) {
+        formData.set("coin_id", coingeckoId)
       }
-    } catch (error) {
-      console.error('為替レートの取得に失敗:', error);
-      alert('為替レートの取得に失敗しました。');
-      setExchangeRate("");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  
-  // フォーム送信時のハンドラ
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+      const file = formData.get("file")
+      console.log(file)
 
-    try {
-      // フォームデータの作成
-      const formData: TransactionForm = {
-        date: selectedDate,
-        exchange: (e.target as HTMLFormElement).exchange.value,
-        transactionType: transactionTypeData,
-        asset: searchTerm,
-        price: price,
-        amount: (e.target as HTMLFormElement).amount.value,
-        fee: (e.target as HTMLFormElement).fee.value,
-        blockchain: (e.target as HTMLFormElement).blockchain.value,
-        exchangeRate: exchangeRate,
-        tx_hash: (e.target as HTMLFormElement).tx_hash.value || undefined,
-        coin_id: coingeckoId || undefined
-      };
-
-      // POSTリクエストの送信
+      
       const response = await fetch(`${API_URL}/transactions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // JWT cookieを自動送信
-        body: JSON.stringify(formData)
-      });
+        credentials: 'include',
+        body: formData
+      })
 
       if (!response.ok) {
-        throw new Error('Transaction submission failed');
+        throw new Error('Transaction submission failed')
       }
 
-      const result = await response.json();
-      console.log('Transaction submitted:', result);
-      alert('Transaction added successfully!');
-
-      // TxHistoryのfetchTransactionsが実行される
-      await onSuccess();
-      onClose();
-
-      setSearchTerm('');
-      setSelectedDate('');
-      setSelectedCoin(null);
-      setExchangeRate('');
-      setTransactionTypeData('');
-      setPrice('');
-      setIsManualMode(false);
+      
+      toast.success('Successfully submitted!',{
+        duration: 6000,
+        position: 'top-center',
+      });
 
 
+      // TxHistory更新
+      await onSuccess()
+      onClose()
+
+      // フォームリセット
+      setSearchTerm('')
+      setSelectedDate('')
+      setSelectedCoin(null)
+      setExchangeRate('')
+      setTransactionTypeData('')
+      setPrice('')
+      setIsManualMode(false)
     } catch (error) {
-      console.error('Error submitting transaction:', error);
-      alert('Failed to add transaction. Please try again.');
+      console.error('Error submitting transaction:', error)
+      toast.error('送信に失敗しました。入力値を確認し直してください。',{
+        duration: 9000,
+        position: 'top-right',
+      });
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -321,34 +314,35 @@ export const AddTx = ({
             <DialogTitle className="text-xl font-bold">Add New Transaction</DialogTitle>
             <Button 
               size="sm"
-              className={`bg-gray-800 mx-4 ${ isManualMode ? "text-green-400 hover:text-green-300"  : "text-blue-400 hover:text-blue-300"} `}
+              className={`bg-gray-800 mx-4 ${ isManualMode ? "text-green-400 hover:text-green-300" : "text-blue-400 hover:text-blue-300" }`}
               onClick={changeInputMode}
             >
               <RefreshCw className="w-5 h-5" />
-              { isManualMode ? 
-                <span>Manual mode</span> : <span>Auto mode</span>}
+              { isManualMode ? "Manual mode" : "Auto mode" }
             </Button>
           </div>
           <DialogDescription>
             ※Please enter Date, Asset first before entering Price
           </DialogDescription>
           <DialogDescription>
-            ※When you enter “Asset,” a list of suggested Assets will be output, and you can click on any of the suggested Assets to complete the entry.
+            ※When you enter “Asset,” a list of suggested Assets will be output. Click on any suggestion to select it.
           </DialogDescription>
           <DialogDescription>
-            ※When entering Asset, if the currency does not appear in the Asset search suggestions, enter the symbol (ticker) for the crypto currency in capital letters for Asset. And enter the price in Manual mode.
+            ※If the currency does not appear, enter the symbol (ticker) in capital letters and switch to "Manual mode" for the price.
           </DialogDescription>
         </DialogHeader>
         
+        {/* フォーム要素に onSubmit を付与し、handleSubmitで multipart/form-data を送る */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
 
-            {/* Date */}
+            {/* Date (name="date" は後で上書きするが一応付けておく) */}
             <div className="space-y-2">
               <Label htmlFor="date" className="text-white">Date</Label>
               <Input 
                 type="date" 
                 id="date"
+                name="date"
                 value={selectedDate}
                 onChange={handleDateChange}
                 className="bg-gray-700 text-white border-gray-600" 
@@ -360,15 +354,14 @@ export const AddTx = ({
             {/* Exchange */}
             <div className="space-y-2">
               <Label htmlFor="exchange" className="text-white">Exchange</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  id="exchange" 
-                  className="bg-gray-700 text-white border-gray-600"
-                  placeholder="Enter cryptocurrency exchange ..." 
-                  required
-                />
-              </div>
+              <Input 
+                type="text" 
+                id="exchange" 
+                name="exchange"
+                className="bg-gray-700 text-white border-gray-600"
+                placeholder="Enter cryptocurrency exchange ..." 
+                required
+              />
             </div>
 
             {/* Transaction Type */}
@@ -387,28 +380,25 @@ export const AddTx = ({
               </Select>
             </div>
 
-            {/* Asset( Symbol )*/}
+            {/* Asset( Symbol ) */}
             <div className="space-y-2">
               <Label htmlFor="asset" className="text-white">Asset ( Enter a Symbol )</Label>
               <div className="relative crypto-search-container">
                 <Input
                   type="text"
                   id="asset"
+                  name="asset"
                   value={searchTerm}
                   onChange={handleInputChange}
                   placeholder="Search cryptocurrency ..."
                   className="bg-gray-700 text-white border-gray-600"
                   required
                 />
-                
-                {/* 通貨検索(fetch)中のスピナー */}
                 {isLoading && (
                   <div className="absolute right-2 top-2">
                     <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
-
-                {/* fetchしたデータを検索候補に表示 */}
                 {showSuggestions && suggestions.length > 0 && (
                   <div className="absolute w-full mt-1 bg-gray-700 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto z-50">
                     {suggestions.map((coin) => (
@@ -429,18 +419,13 @@ export const AddTx = ({
               </div>
             </div>
 
-            {/* Price */}
+            {/* Price (name="price" にしておき、stateで制御) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2 h-6">
                 <Label htmlFor="price" className="text-white">Price</Label>
-                <p
-                    className={`flex items-center gap-1 px-2 py-1 h-8 bg-gray-800 ${isManualMode ? 'text-green-400' : 'text-blue-400'}`}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    {
-                      isManualMode ? 
-                        <span>Manual</span> : <span>Auto</span>
-                    }
+                <p className={`flex items-center gap-1 px-2 py-1 h-8 bg-gray-800 ${isManualMode ? 'text-green-400' : 'text-blue-400'}`}>
+                  <Edit2 className="w-4 h-4" />
+                  {isManualMode ? "Manual" : "Auto"}
                 </p>
               </div>
               <div className="relative">
@@ -448,18 +433,16 @@ export const AddTx = ({
                 <Input 
                   type="number" 
                   id="price"
+                  name="price"
                   value={price}
-                  // ★ isPriceEditable が false の場合に readOnly
                   readOnly={!isManualMode}
                   className={`pl-6 bg-gray-700 text-white border-gray-600 ${
                     isManualMode ? '' : ' cursor-not-allowed'
                   }`}
                   placeholder="0.00"
-                  // 手動入力できるようになったら必須にする(お好みで)
                   required
-                  onChange={(e) => setPrice(e.target.value)} 
+                  onChange={(e) => setPrice(e.target.value)}
                 />
-                {/* 価格取得中のスピナー */}
                 {isLoading && (
                   <div className="absolute right-2 top-2">
                     <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -473,7 +456,8 @@ export const AddTx = ({
               <Label htmlFor="amount" className="text-white">Amount</Label>
               <Input 
                 type="number" 
-                id="amount" 
+                id="amount"
+                name="amount"
                 className="bg-gray-700 text-white border-gray-600"
                 step="any"
                 required
@@ -486,9 +470,10 @@ export const AddTx = ({
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-gray-400">$</span>
                 <Input 
-                  type="number" 
-                  id="fee" 
-                  className="pl-6 bg-gray-700 text-white border-gray-600" 
+                  type="number"
+                  id="fee"
+                  name="fee"
+                  className="pl-6 bg-gray-700 text-white border-gray-600"
                   placeholder="0.00"
                   required
                 />
@@ -498,39 +483,34 @@ export const AddTx = ({
             {/* Blockchain */}
             <div className="space-y-2">
               <Label htmlFor="blockchain" className="text-white">BlockChain</Label>
-              <div className="relative">
-                <Input 
-                  type="text" 
-                  id="blockchain" 
-                  className=" bg-gray-700 text-white border-gray-600"
-                  placeholder="Enter BlockChain..." 
-                  required
-                />
-              </div>
+              <Input 
+                type="text" 
+                id="blockchain"
+                name="blockchain"
+                className=" bg-gray-700 text-white border-gray-600"
+                placeholder="Enter BlockChain..." 
+                required
+              />
             </div>
 
             {/* USD / JPY */}
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2 h-6">
-                <Label htmlFor="exchange-rate" className="text-white">
+                <Label htmlFor="exchangeRate" className="text-white">
                   USD / JPY
                 </Label>
-                <p
-                  className={`flex items-center gap-1 px-2 py-1 h-8 bg-gray-800 ${isManualMode ? 'text-green-400' : 'text-blue-400'}`}
-                >
+                <p className={`flex items-center gap-1 px-2 py-1 h-8 bg-gray-800 ${isManualMode ? 'text-green-400' : 'text-blue-400'}`}>
                   <Edit2 className="w-4 h-4" />
-                  {
-                    isManualMode ? 
-                      <span>Manual</span> : <span>Auto</span>
-                  }
+                  {isManualMode ? "Manual" : "Auto"}
                 </p>
               </div>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-gray-400">¥</span>
                 <Input 
                   type="number"
-                  id="exchange-rate"
-                  value={exchangeRate || ''}
+                  id="exchangeRate"
+                  name="exchangeRate"
+                  value={exchangeRate}
                   className={`pl-6 bg-gray-700 text-white border-gray-600 ${ isManualMode ? "" : "cursor-not-allowed"}`}
                   placeholder="Enter Exchange Rate"
                   onChange={(e) => setExchangeRate(e.target.value)}
@@ -544,26 +524,64 @@ export const AddTx = ({
               </div>
             </div>
 
-            {/* Transaction ID */}
-            <div className="space-y-2 md:col-span-2 lg:col-span-3">
+            {/* file */}
+            <div className="space-y-2 col-span-3">
+              <label htmlFor="file" className="text-white block">
+                File related to Tx (Optional)
+              </label>
+              <div className="relative">
+                <label
+                  htmlFor="file"
+                  className={`bg-gray-700 text-white px-4 rounded-md cursor-pointer border border-gray-600 hover:bg-gray-600 flex items-center h-10 ${
+                    fileName ? "bg-green-500 hover:bg-green-400 border-green-600" : ""
+                  }`}
+                >
+                  {fileName ? `✅ ${fileName}` : "ファイルを選択"}
+                </label>
+                <input
+                  type="file"
+                  id="file"
+                  name="file"
+                  accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" //添付できる拡張子を指定
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+            </div>
+
+            {/* Transaction ID (tx_hash) */}
+            <div className="space-y-2 col-span-4">
               <Label htmlFor="tx_hash" className="text-white">Transaction ID (Optional)</Label>
               <Input 
-                id="tx_hash" 
-                className="bg-gray-700 text-white border-gray-600" 
+                id="tx_hash"
+                name="tx_hash"
+                className="bg-gray-700 text-white border-gray-600"
+                placeholder="Enter Transaction ID" 
+              />
+            </div>
+
+            {/* Transaction Notes (tx_notes) */}
+            <div className="space-y-2 col-span-4">
+              <Label htmlFor="tx_notes" className="text-white">Transaction Notes (Optional)</Label>
+              <Textarea
+                id="tx_notes"
+                name="tx_notes"
+                className="bg-gray-700 text-white border-gray-600 w-full min-h-[100px]"
+                placeholder="Enter any additional notes..."
               />
             </div>
           </div>
 
           <div className="flex justify-end gap-4 pt-4">
             <Button 
-              type="button" 
-              variant="outline" 
+              type="button"
+              variant="outline"
               onClick={onClose}
               className="bg-gray-200 text-gray-700 hover:bg-gray-300"
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               type="submit"
               className="bg-blue-600 text-white hover:bg-blue-500"
             >
@@ -573,5 +591,5 @@ export const AddTx = ({
         </form>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}

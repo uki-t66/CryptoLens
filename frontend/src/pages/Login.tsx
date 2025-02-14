@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -24,14 +25,21 @@ export const Login = () => {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (data.ok) {
+        // ログイン認証成功したらtop画面のdashboardへ遷移
         navigate('/dashboard');
       } else {
-        alert(data.message);
+        toast.error('入力情報が正しくありません。',{
+          duration: 5000,
+          position: 'top-center',
+        });
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert('ログインに失敗しました');
+      toast.error('入力情報が正しくありません。',{
+        duration: 5000,
+        position: 'top-center',
+      });
     }
   };
 
