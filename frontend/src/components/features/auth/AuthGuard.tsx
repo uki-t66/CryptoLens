@@ -33,7 +33,7 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
 
   // 認証確認中はローディング表示
   if (isAuthenticated === null) {
-    return <div>Loading...</div>;
+    return <Navigate to="/dashboard" />;
   }
 
   if (!isAuthenticated) {
