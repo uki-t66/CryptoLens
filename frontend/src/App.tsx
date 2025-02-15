@@ -23,9 +23,23 @@ const App = () => {
     <>
       <BrowserRouter>
         <Routes>
-          {/* 認証不要のルート */}
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/login" element={<Login />} />
+          {/* 認証不要のルート (既に認証済みの場合、dashboardへリダイレクト) */}
+          <Route
+            path="/signup"
+            element={
+              <AuthGuard>
+                <SignUp />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <AuthGuard>
+                <Login />
+              </AuthGuard>
+            }
+          />
           
           {/* 認証が必要なルート */}
           <Route
