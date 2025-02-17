@@ -1,42 +1,15 @@
 import { Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { useAuth } from './AuthContext';
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
 export const AuthGuard = ({ children }: AuthGuardProps) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  // context使用
+  const { isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    const verifyAuth = async () => {
-      try {
-        const response = await fetch(`${API_URL}/auth/verify`, {
-          credentials: 'include', // Cookie送信のために必要
-        });
-
-        if (response.ok) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error('Authentication verification failed:', error);
-        setIsAuthenticated(false);
-      }
-    };
-
-    verifyAuth();
-  }, []);
-
-  // 認証確認中はローディング表示
-  if (isAuthenticated === null) {
-    return <Navigate to="/dashboard" />;
-  }
-
-  if (!isAuthenticated) {
+  if (isAuthenticated === false) {
     return <Navigate to="/login" />;
   }
 

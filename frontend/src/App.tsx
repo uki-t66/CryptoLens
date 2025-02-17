@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import { Sidebar } from './components/layout/Sidebar';
 import { Dashboard } from './pages/Dashboard';
@@ -21,105 +21,89 @@ const App = () => {
 
   return (
     <>
-      <BrowserRouter>
-        <Routes>
-          {/* 認証不要のルート (既に認証済みの場合、dashboardへリダイレクト) */}
-          <Route
-            path="/signup"
-            element={
-              <AuthGuard>
-                <SignUp />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/login"
-            element={
-              <AuthGuard>
-                <Login />
-              </AuthGuard>
-            }
-          />
-          
-          {/* 認証が必要なルート */}
-          <Route
-            path="/dashboard"
-            element={
-              <AuthGuard>
-                <div className="fixed flex w-full h-full">
-                  <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-56' : 'w-16'}`}>
-                    <Sidebar 
-                      isOpen={isSidebarOpen}
-                      onToggle={toggleSidebar}
-                    />
-                  </nav>
-                  <main className="flex-grow pb-10">
-                    <Dashboard />
-                  </main>
-                </div>
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/asset"
-            element={
-              <AuthGuard>
-                <div className="fixed flex w-full h-full">
-                  <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-56' : 'w-16'}`}>
-                    <Sidebar 
-                      isOpen={isSidebarOpen}
-                      onToggle={toggleSidebar}
-                    />
-                  </nav>
-                  <main className="flex-grow pb-10">
-                    <Asset />
-                  </main>
-                </div>
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/transaction"
-            element={
-              <AuthGuard>
-                <div className="fixed flex w-full h-full">
-                  <nav className={`bg-gray-800 border border-gray-700 shrink-0 transition-[width] duration-350 ${isSidebarOpen ? 'w-56' : 'w-16'}`}>
-                    <Sidebar 
-                      isOpen={isSidebarOpen}
-                      onToggle={toggleSidebar}
-                    />
-                  </nav>
-                  <main className="flex-grow pb-10">
-                    <Transaction />
-                  </main>
-                </div>
-              </AuthGuard>
-            }
-          />
-          
-          <Route
-            path="/analytics"
-            element={
-              <AuthGuard>
-                <div className="fixed flex w-full h-full">
-                  <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-56' : 'w-16'}`}>
-                    <Sidebar 
-                      isOpen={isSidebarOpen}
-                      onToggle={toggleSidebar}
-                    />
-                  </nav>
-                  <main className="flex-grow pb-10">
-                    <Transaction />
-                  </main>
-                </div>
-              </AuthGuard>
-            }
-          />
-          
-          {/* デフォルトでログインページにリダイレクト */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+          {/* 認証不要のルート */}
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/login" element={<Login />} />
+        
+        {/* 認証が必要なルート */}
+        <Route
+          path="/dashboard"
+          element={
+            <AuthGuard>
+              <div className="fixed flex w-full h-full">
+                <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-56' : 'w-16'}`}>
+                  <Sidebar 
+                    isOpen={isSidebarOpen}
+                    onToggle={toggleSidebar}
+                  />
+                </nav>
+                <main className="flex-grow pb-10">
+                  <Dashboard />
+                </main>
+              </div>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/asset"
+          element={
+            <AuthGuard>
+              <div className="fixed flex w-full h-full">
+                <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-56' : 'w-16'}`}>
+                  <Sidebar 
+                    isOpen={isSidebarOpen}
+                    onToggle={toggleSidebar}
+                  />
+                </nav>
+                <main className="flex-grow pb-10">
+                  <Asset />
+                </main>
+              </div>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/transaction"
+          element={
+            <AuthGuard>
+              <div className="fixed flex w-full h-full">
+                <nav className={`bg-gray-800 border border-gray-700 shrink-0 transition-[width] duration-350 ${isSidebarOpen ? 'w-56' : 'w-16'}`}>
+                  <Sidebar 
+                    isOpen={isSidebarOpen}
+                    onToggle={toggleSidebar}
+                  />
+                </nav>
+                <main className="flex-grow pb-10">
+                  <Transaction />
+                </main>
+              </div>
+            </AuthGuard>
+          }
+        />
+        
+        <Route
+          path="/analytics"
+          element={
+            <AuthGuard>
+              <div className="fixed flex w-full h-full">
+                <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-56' : 'w-16'}`}>
+                  <Sidebar 
+                    isOpen={isSidebarOpen}
+                    onToggle={toggleSidebar}
+                  />
+                </nav>
+                <main className="flex-grow pb-10">
+                  <Transaction />
+                </main>
+              </div>
+            </AuthGuard>
+          }
+        />
+        
+        {/* デフォルトでログインページにリダイレクト */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
       <Toaster />  {/*クリップボードコピー*/}
       <HotToaster /> {/*Loadingスタイル*/}
     </>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/components/features/auth/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -10,6 +11,9 @@ export const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  // useContextを使用
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,9 +29,10 @@ export const Login = () => {
 
       const data = await response.json();
 
-      if (data.ok) {
+      if (data.success) {
         // ログイン認証成功したらtop画面のdashboardへ遷移
         navigate('/dashboard');
+        login();
       } else {
         toast.error('入力情報が正しくありません。',{
           duration: 5000,
