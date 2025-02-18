@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
     verifyToken();
-  }, [navigate]);
+  }, []);
 
   const login = () => {
     setIsAuthenticated(true);
