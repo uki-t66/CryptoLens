@@ -260,9 +260,7 @@ export const AddTx = ({
       formData.set("asset", searchTerm)
       formData.set("price", price)
       formData.set("exchangeRate", exchangeRate)
-      if (coingeckoId) {
-        formData.set("coin_id", coingeckoId)
-      }
+      formData.set("coin_id", coingeckoId) //manualモードの入力でcoin_idが "" でもcoin_idもsubmitしてバックエンドでcoin_idを取得する
 
       const file = formData.get("file")
       console.log(file)
@@ -296,6 +294,8 @@ export const AddTx = ({
       setExchangeRate('')
       setTransactionTypeData('')
       setPrice('')
+      setFileName(null)
+      setCoingeckoId("")
       setIsManualMode(false)
     } catch (error) {
       console.error('Error submitting transaction:', error)
@@ -322,13 +322,13 @@ export const AddTx = ({
             </Button>
           </div>
           <DialogDescription>
-            ※Please enter Date, Asset first before entering Price
+            ✅ Autoモード: Price入力前に必ず Date と Asset を入力。「Asset」を入力すると候補が表示されるので選択してください。
           </DialogDescription>
           <DialogDescription>
-            ※When you enter “Asset,” a list of suggested Assets will be output. Click on any suggestion to select it.
+            ✅ Manualモード: Asset欄には仮想通貨の Symbol（例: BTC）を大文字で入力し、正確な Price を入力してください。
           </DialogDescription>
           <DialogDescription>
-            ※If the currency does not appear, enter the symbol (ticker) in capital letters and switch to "Manual mode" for the price.
+            ⚠️ Symbol は BTC などの略称です。正式名称（例: Bitcoin）ではなく、必ずティッカーシンボルを入力してください。
           </DialogDescription>
         </DialogHeader>
         
