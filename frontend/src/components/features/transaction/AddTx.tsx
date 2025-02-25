@@ -51,7 +51,7 @@ export const AddTx = ({
   const [transactionTypeData, setTransactionTypeData] = useState<string>('')
   const [price, setPrice] = useState<string>('')
   const [fileName, setFileName] = useState<string | null>(null);
-  const [coingeckoId, setCoingeckoId] = useState<string>("")
+  const [coingeckoId, setCoingeckoId] = useState<string>("") //デフォルト空文字列
   const [isManualMode, setIsManualMode] = useState(false)
 
 
@@ -71,8 +71,11 @@ export const AddTx = ({
     setSelectedDate(newDate)
     fetchExchangeRate(newDate)
 
-    if (selectedCoin) {
-      fetchHistoricalPrice(selectedCoin.id, newDate)
+    // AutoモードかつAssetが入力済みの場合実行
+    if(!isManualMode){
+      if (selectedCoin) {
+        fetchHistoricalPrice(selectedCoin.id, newDate)
+      }
     }
   }
 
@@ -123,8 +126,12 @@ export const AddTx = ({
     setCoingeckoId(coin.id)
     setSuggestions([])
     setShowSuggestions(false)
-    if (selectedDate) {
-      fetchHistoricalPrice(coin.id, selectedDate)
+
+    // Autoモードかつ日付が選択されていたら実行
+    if(!isManualMode){
+      if (selectedDate) {
+        fetchHistoricalPrice(coin.id, selectedDate)
+      }
     }
   }
 
@@ -255,12 +262,20 @@ export const AddTx = ({
       // フォーム要素全体から FormData を作成
       const formData = new FormData(e.currentTarget)
 
+      if(!coingeckoId){
+        return toast.error('Asset欄検索候補から選択して入力してください。',{
+          duration: 9000,
+          position: 'top-center',
+        });
+      }
+
       formData.set("date", selectedDate)
       formData.set("transactionType", transactionTypeData)
       formData.set("asset", searchTerm)
       formData.set("price", price)
       formData.set("exchangeRate", exchangeRate)
-      formData.set("coin_id", coingeckoId) //manualモードの入力でcoin_idが "" でもcoin_idもsubmitしてバックエンドでcoin_idを取得する
+      formData.set("coin_id", coingeckoId)
+
 
       const file = formData.get("file")
       console.log(file)
@@ -325,7 +340,10 @@ export const AddTx = ({
             ✅ Autoモード: Price入力前に必ず Date と Asset を入力。「Asset」を入力すると候補が表示されるので選択してください。
           </DialogDescription>
           <DialogDescription>
-            ✅ Manualモード: Asset欄には仮想通貨の Symbol（例: BTC）を大文字で入力し、正確な Price を入力してください。
+            ✅ Manualモード: 購入(売却)したAssetの正確な Price を入力してください。
+          </DialogDescription>
+          <DialogDescription>
+            ✅ 両モードともAsset欄に表示される検索候補を選択して入力してください。
           </DialogDescription>
           <DialogDescription>
             ⚠️ Symbol は BTC などの略称です。正式名称（例: Bitcoin）ではなく、必ずティッカーシンボルを入力してください。
