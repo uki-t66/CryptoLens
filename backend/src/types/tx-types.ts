@@ -15,7 +15,7 @@ export interface TransactionRow extends RowDataPacket {
     file?: File;
     tx_hash?: string;
     tx_notes?: Text;
-    coin_id?: string;
+    coin_id: string;
   }
 
 
