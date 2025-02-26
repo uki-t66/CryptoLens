@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { pool } from '../config/database';
 import { TransactionRow,TotalCountRow, AssetBalance } from '../types/tx-types';
 import { AuthRequest } from '../middleware/auth-middleware';
+import { createTransactionService } from '../services/transaction-service';
 
 
 //  フロントエンドのAddTxからsubmitされたformをDBに保存する関数
@@ -16,50 +17,19 @@ export const createTransaction = async (
           return Promise.resolve();
       }
 
-      const transaction: TransactionRow = req.body;
-      console.log(transaction)
+      // formの取引データ
+      const txData = req.body;
+      console.log(txData)
       
-      
-      await pool.execute(
-        `INSERT INTO transactions (
-            user_id,
-            date, 
-            exchange, 
-            transaction_type, 
-            asset, 
-            price, 
-            amount, 
-            fee, 
-            blockchain, 
-            exchange_rate,
-            file,
-            tx_hash,
-            tx_notes,
-            coin_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-            userId,
-            transaction.date,
-            transaction.exchange,
-            transaction.transactionType,
-            transaction.asset,
-            transaction.price,
-            transaction.amount,
-            transaction.fee,
-            transaction.blockchain,
-            transaction.exchangeRate,
-            transaction.file || null,
-            transaction.tx_hash || null,
-            transaction.tx_notes || null,
-            transaction.coin_id || null
-        ]
-    );
+      await createTransactionService(userId, txData);
 
       res.status(201).json({ success: true });
+    
       return Promise.resolve();
 
   } catch (error) {
       res.status(500).json({ success: false });
+    
       return Promise.resolve();
   }
 };
