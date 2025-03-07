@@ -52,6 +52,7 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
         const [transactions] = await pool.execute<RowDataPacket[]>(
             `SELECT * FROM transactions 
              WHERE user_id = ? 
+             AND transaction_type IN ('Buy', 'Sell', 'Reward', 'Transfer') 
              ORDER BY date DESC 
              LIMIT ?, ?`,
             [req.user?.id, offset.toString(), limit.toString()]
