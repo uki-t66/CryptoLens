@@ -39,7 +39,7 @@ export async function createTransactionService(userId: number, txData: Transacti
     txData.amount,
     txData.fee,
     txData.blockchain,
-    txData.exchangeRate,
+    txData.exchange_rate,
     txData.file || null,
     txData.tx_hash || null,
     txData.tx_notes || null,

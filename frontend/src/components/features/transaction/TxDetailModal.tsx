@@ -41,43 +41,42 @@ export const TxDetailModal = ({
   const [amount, setAmount] = useState(transaction.amount)
   const [fee, setFee] = useState(transaction.fee)
 
-  // --- 更新処理 ---
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      const response = await fetch(`${API_URL}/transactions/${transaction.transaction_id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ price, amount, fee }),
-      })
+  // 更新処理
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+  //   try {
+  //     const response = await fetch(`${API_URL}/transactions/${transaction.transaction_id}`, {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json" },
+  //       credentials: "include",
+  //       body: JSON.stringify({ price, amount, fee }),
+  //     })
 
-      if (response.ok) {
-        // 更新後に一覧を再取得
-        fetchTransactions()
-        // モーダルを閉じる
-        onClose()
-      } else {
-        console.error("Failed to update transaction.")
-      }
-    } catch (error) {
-      console.error("Error updating transaction:", error)
-    }
-  }
+  //     if (response.ok) {
+  //       // 更新後に一覧を再取得
+  //       fetchTransactions()
+  //       // モーダルを閉じる
+  //       onClose()
+  //     } else {
+  //       console.error("Failed to update transaction.")
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating transaction:", error)
+  //   }
+  // }
 
-  // --- 削除処理 ---
-  const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this transaction?")) {
+  // 削除処理(物理的にレコード削除ではなく論理削除(ソフトデリートを採用),会計会計システムの取引方式を採用。 物理的に削除してしまうとテーブル間の整合性が崩れてしまうため。)
+  const handleDelete = async (transactionId: number) => {
+    if (confirm("この取引を削除してもよろしいですか？")) {
       try {
-        const response = await fetch(`${API_URL}/transactions/${id}`, {
+        const response = await fetch(`${API_URL}/transactions/${transactionId}`, {
           method: "DELETE",
           credentials: "include",
         })
         if (response.ok) {
           fetchTransactions()
           // モーダルを閉じたい場合は下記を有効化
-          // onClose()
-
+          onClose()
           toast({
             title: "Success",
             description: "Transaction deleted successfully",
@@ -134,7 +133,7 @@ export const TxDetailModal = ({
         </div>
 
         {/* 編集フォーム (Price, Amount, Feeなど) */}
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+        <form className="space-y-4 mt-6">
           <div>
             <Label htmlFor="price">Price</Label>
             <Input
@@ -167,6 +166,7 @@ export const TxDetailModal = ({
           </div>
 
           <div className="flex justify-end gap-2">
+            {/* キャンセルボタン */}
             <Button
               type="button"
               variant="outline"
@@ -175,22 +175,16 @@ export const TxDetailModal = ({
             >
               Cancel
             </Button>
-            <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
-              Save Changes
+            {/* 削除ボタン */}
+            <Button
+            onClick={() => handleDelete(transaction.transaction_id)}
+            className="bg-red-600 text-white hover:bg-red-700"
+            >
+              <TrashIcon className="mr-2 h-4 w-4" />
+              Delete this transaction
             </Button>
           </div>
         </form>
-
-        {/* 削除ボタン */}
-        <div className="mt-4 flex justify-end">
-          <Button
-            onClick={() => handleDelete(transaction.transaction_id)}
-            className="bg-red-600 text-white hover:bg-red-700"
-          >
-            <TrashIcon className="mr-2 h-4 w-4" />
-            Delete this transaction
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   )

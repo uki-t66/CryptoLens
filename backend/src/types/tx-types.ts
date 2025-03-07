@@ -1,7 +1,7 @@
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 // フロントエンドのAddTxからsubmitされるformの型
-export interface TransactionRow extends RowDataPacket {
+export interface TransactionRow {
     id: number;
     date: string;
     exchange: string;
@@ -11,7 +11,7 @@ export interface TransactionRow extends RowDataPacket {
     amount: string;
     fee: string;
     blockchain: string;
-    exchangeRate: string;
+    exchange_rate: string;
     file?: File;
     tx_hash?: string;
     tx_notes?: Text;
