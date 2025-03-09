@@ -35,9 +35,10 @@ export const AssetSummaryProvider: React.FC<{ children: React.ReactNode }> = ({ 
         credentials: "include",
       });
       if (!response.ok) {
-        toast.error('資産データの取得に失敗しました。',{
-          duration: 5000,
-          position: 'top-center',
+        const errorData = await response.json(); // エラーメッセージを取得
+        toast.error(errorData.error, {
+          duration: 10000,
+          position: "top-center",
         });
         return;
       }

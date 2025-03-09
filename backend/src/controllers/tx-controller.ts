@@ -197,6 +197,9 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
       const coingeckoUrl = `${COINGECKO_API}/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true`;
   
       const response = await fetch(coingeckoUrl);
+      if(!response.ok){
+        res.status(404).json({ error: "資産情報を取得できませんでした。時間をおいてブラウザを更新してください。" });
+      }
       const priceData = await response.json();
       // priceData[coin_id] = { usd: 12345, usd_24h_change: 2.34, ... }
   
