@@ -15,11 +15,14 @@ export const AssetField = () => {
   // Contextから assets を取得
   const { assets } = useAssetSummary();
 
-  // 「総ポートフォリオ評価額」を計算
-  const totalPortfolioValue = assets.reduce((acc, cur) => acc + cur.totalValue, 0);
+  // 「amount が 0 でない」資産だけを対象にする
+  const filteredAssets = assets.filter((a) => a.amount !== 0);
 
-  // 評価額の大きい順にソートして Rank を振る
-  const sortedAssets = [...assets].sort((a, b) => b.totalValue - a.totalValue);
+  // 総ポートフォリオ評価額
+  const totalPortfolioValue = filteredAssets.reduce((acc, cur) => acc + cur.totalValue, 0);
+
+  // 評価額の大きい順にソート
+  const sortedAssets = [...filteredAssets].sort((a, b) => b.totalValue - a.totalValue);
 
   return (
     <div className="mx-10 h-[88%] relative bg-gray-800 rounded-lg shadow-sm border border-gray-700 overflow-auto">
@@ -41,14 +44,15 @@ export const AssetField = () => {
         <TableBody>
           {sortedAssets.map((asset, idx) => {
             const rank = idx + 1;
-            const allocation =
-              totalPortfolioValue > 0
-                ? ((asset.totalValue / totalPortfolioValue) * 100).toFixed(2)
-                : "0.00";
+            const allocation = totalPortfolioValue > 0
+              ? ((asset.totalValue / totalPortfolioValue) * 100).toFixed(2)
+              : "0.00";
 
             return (
               <TableRow key={asset.asset} className="border-gray-700">
+                {/* Rank */}
                 <TableCell>{rank}</TableCell>
+                {/* Asset */}
                 <TableCell>{asset.asset.toUpperCase()}</TableCell>
                 <TableCell>${asset.currentPrice.toFixed(2)}</TableCell>
                 <TableCell
