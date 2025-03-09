@@ -162,7 +162,7 @@ export const AddTx = ({
       }
     } catch (error) {
       console.error('価格の取得に失敗:', error)
-      toast.error('古い日付は価格が取れない場合があります。手動入力に切り替えます。',{
+      toast.error('1年前の価格データは取得できません。手動入力に切り替えます。',{
         duration: 9000,
         position: 'top-right',
       });
@@ -270,10 +270,10 @@ export const AddTx = ({
       }
 
       formData.set("date", selectedDate)
-      formData.set("transactionType", transactionTypeData)
+      formData.set("transaction_type", transactionTypeData)
       formData.set("asset", searchTerm)
       formData.set("price", price)
-      formData.set("exchangeRate", exchangeRate)
+      formData.set("exchange_rate", exchangeRate)
       formData.set("coin_id", coingeckoId)
 
 

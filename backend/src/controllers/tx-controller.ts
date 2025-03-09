@@ -98,7 +98,7 @@ export const deleteTransaction = async (req: AuthRequest, res: Response):Promise
         id: userId,
         date: new Date().toISOString().slice(0, 10), //削除するレコードを相殺する日付
         exchange: originalTx.exchange,
-        transactionType: "Reverse",
+        transaction_type: "Reverse",
         asset: originalTx.asset,
         price: originalTx.price,
         amount: String(-Number(originalTx.amount)),    // 逆数量(負の数)
@@ -165,140 +165,87 @@ export const deleteTransaction = async (req: AuthRequest, res: Response):Promise
 
 // ユーザーの資産情報を返すエンドポイント
 export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<void> => {
-  // try {
-  //   const userId = req.user?.id;
-  //   if (!userId) {
-  //      res.status(401).json({ message: 'Unauthorized' });
-  //   }
 
-  //   // 1. ユーザーの資産(合計購入量、合計購入金額)を取得。「transaction_type = 'BUY'」のみを対象とする。
-  //   const [rows] = await pool.execute<AssetBalance[]>(
-  //     `
-  //     SELECT 
-  //       asset,
-  //       SUM(amount) AS totalAmount,
-  //       SUM(price * amount) AS totalCost -- BUYのみの合計金額
-  //     FROM transactions
-  //     WHERE user_id = ?
-  //       AND transaction_type = 'BUY'
-  //     GROUP BY asset
-  //     `,
-  //     [userId]
-  //   );
+    // コインゲッコーAPI
+    const COINGECKO_API = process.env.COINGECKO_API;
 
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+       res.status(401).json({ message: 'Unauthorized' });
+    }
 
-  //   // 2. CoinGecko で使用するために、各assetに対応する"CoinGecko上のID"を検索します。
-  //   //    - 本来であれば、DBに「coinGeckoId」を紐付けておくのがおすすめです。
-  //   //    - ここではフロントエンドの例と同じように "search?query=シンボル" で簡易に対応します。
-    
-  //   // CoinGecko APIのベースURL。環境変数などに定義している想定。
-  //   const COINGECKO_API = process.env.COINGECKO_API
-  //   const coinGeckoIds: Array<string | null> = await Promise.all(
-  //     rows.map(async (item: any) => {
-  //       const searchRes = await fetch(`${COINGECKO_API}/search?query=${item.asset}`);
-  //       if (!searchRes.ok) {
-  //         console.error(`CoinGecko search failed for asset: ${item.asset}`);
-  //         return null;
-  //       }
-  //       const searchData = await searchRes.json();
-    
-  //       // コインシンボルがマッチするものを1つ探す
-  //       const found = searchData.coins.find(
-  //         (coin: { symbol: string }) => coin.symbol.toLowerCase() === item.asset.toLowerCase()
-  //       );
-  //       return found ? found.id : null;
-  //     })
-  //   );
-  //   console.log(coinGeckoIds.length)
+    //user_positionsテーブルから保有通貨一覧 & 保有量 / 平均単価 を取得
+    const [positions] = await pool.query(`
+        SELECT coin_id, total_amount, average_cost
+        FROM user_positions
+        WHERE user_id=?
+      `, [userId]);
 
-  //   // 無効なIDを除外してカンマ区切りに
-  //   const validIds = coinGeckoIds.filter(Boolean).join(',');
-  //   if (!validIds) {
-  //     // 何も有効なIDが見つからなかった場合
-  //     const responseData = rows.map((item: any) => {
-  //       return {
-  //         asset: item.asset,
-  //         amount: Number(item.totalAmount),
-  //         averageCost: item.totalCost / item.totalAmount, // 平均取得単価
-  //         currentPrice: 0,
-  //         totalValue: 0,
-  //         change24h: '0%',
-  //         profitLossRate: '0%',
-  //         profitLossAmount: 0,
-  //       };
-  //     });
-  //      res.json({ summary: responseData });
-  //   }
-  //   console.log(`使えるIDは${validIds}`)
+    // positions が空なら空の配列を返す
+    if ((positions as any[]).length === 0) {
+        res.json({ summary: [] });
+      }
 
-  //   // CoinGecko APIから一度に価格データを取得 (現在価格 + 24h変化率)
-  //   const priceRes = await fetch(`${COINGECKO_API}/simple/price?ids=${validIds}&vs_currencies=usd&include_24hr_change=true`);
+    //CoinGeckoで保有している通貨の現在価格 & 24h変動率をまとめて取得
+    //    例: coin_idの配列をカンマ区切りにして /simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true
+    const coinIds = (positions as any[]).map((pos) => pos.coin_id).join(",");
 
-  //   if (!priceRes.ok) {
-  //     throw new Error('Failed to fetch price data from CoinGecko');
-  //   }
-  //   const pricesData = await priceRes.json();
-  //   console.log(pricesData)
+    //保有通貨の現在価格、24時間の価格の変動率データをCoingeckoから取得
+    const coingeckoUrl = `${COINGECKO_API}/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true`;
 
-  //   // 取得したデータを組み合わせてレスポンス用のオブジェクトを作成
-  //   const summaryData = rows.map((item: any, index: number) => {
-  //     const assetSymbol = item.asset;
-  //     const totalAmount = Number(item.totalAmount) || 0;
-  //     const totalCost = Number(item.totalCost) || 0;
-  //     const averageCost = totalAmount > 0 ? totalCost / totalAmount : 0;
+    const response = await fetch(coingeckoUrl);
+    const priceData = await response.json(); 
+    console.log(priceData)
+    // priceData[coin_id] = { usd: 12345, usd_24h_change: 2.34 }
 
-  //     const coinId = coinGeckoIds[index];
-  //     if (!coinId) {
-  //       // CoinGecko IDが取れなかったものは価格情報なし
-  //       return {
-  //         asset: assetSymbol,
-  //         amount: totalAmount,
-  //         averageCost,
-  //         currentPrice: 0,
-  //         totalValue: 0,
-  //         change24h: '0%',
-  //         profitLossRate: '0%',
-  //         profitLossAmount: 0,
-  //       };
-  //     }
-
-  //     // CoinGeckoからのデータを参照
-  //     const coinInfo = pricesData[coinId];
-  //     const currentPrice = coinInfo?.usd ?? 0; 
-  //     const usd24hChange = coinInfo?.usd_24h_change ?? 0; // 例: +2.5 であれば +2.5%
-
-  //     // 保有総額(評価額)
-  //     const totalValue = currentPrice * totalAmount;
-
-  //     // 含み損益 (単純計算: (現在価格 - 平均取得単価) × 保有数量 )
-  //     const profitLossAmount = (currentPrice - averageCost) * totalAmount;
-
-  //     // 含み損益率 ( ( 現在価格 - 平均取得単価 ) ÷ 平均取得単価 ) × 100
-  //     const profitLossRate = averageCost > 0
-  //       ? (profitLossAmount / (averageCost * totalAmount)) * 100
-  //       : 0;
-
-  //     // 24hの変化率はCoinGeckoが「前日比(%)」の値を返している想定
-  //     // 例: usd_24h_change: 2.5 -> +2.5%
-  //     const change24h = `${usd24hChange >= 0 ? '+' : ''}${usd24hChange.toFixed(2)}%`;
-
-  //     return {
-  //       asset: assetSymbol,
-  //       amount: totalAmount,
-  //       averageCost,
-  //       currentPrice,
-  //       totalValue,
-  //       change24h,
-  //       // 含み損益率と含み損益額
-  //       profitLossRate: `${profitLossRate >= 0 ? '+' : ''}${profitLossRate.toFixed(2)}%`,
-  //       profitLossAmount: Number(profitLossAmount.toFixed(2)),
-  //     };
-  //   });
-
-  //   // フロントエンドが受け取る JSON
-  //   res.json({ summary: summaryData });
-  // } catch (error) {
-  //   console.error('Error fetching asset summary:', error);
-  //   res.status(500).json({ message: 'Failed to fetch asset summary' });
-  // }
-};
+     //レスポンス用の配列を構築
+     const summary = (positions as any[]).map((pos) => {
+        const coinId = pos.coin_id;
+        const amount = Number(pos.total_amount) || 0;
+        const avgCost = Number(pos.average_cost) || 0;
+        
+        // 現在価格 & 24h変動率
+        const cg = priceData[coinId] || {};
+        const currentPrice = cg.usd || 0; // USD
+        const change24hValue = cg.usd_24h_change || 0; // 例: 2.34 => +2.34% と表示
+  
+        // 評価額
+        const totalValue = amount * currentPrice;
+  
+        // 含み損益額
+        const profitLossAmount = (currentPrice - avgCost) * amount;
+        // 含み損益率
+        let profitLossRate = "0.00%";
+        if (avgCost !== 0) {
+          profitLossRate = ((currentPrice - avgCost) / avgCost * 100).toFixed(2) + "%";
+          if (profitLossAmount >= 0) {
+            profitLossRate = "+" + profitLossRate;
+          }
+        }
+  
+        // 24h変動率
+        let change24h = change24hValue.toFixed(2) + "%";
+        if (change24hValue > 0) {
+          change24h = "+" + change24h;
+        }
+  
+        return {
+          asset: coinId,                      // or symbol
+          amount,
+          averageCost: avgCost,
+          currentPrice,
+          totalValue,
+          change24h,
+          profitLossRate,
+          profitLossAmount,
+        };
+      });
+  
+      // 5. レスポンス返却
+       res.json({ summary });
+    } catch (error) {
+      console.error("Error in getAssetSummary:", error);
+       res.status(500).json({ error: "Server Error" });
+    }
+  };

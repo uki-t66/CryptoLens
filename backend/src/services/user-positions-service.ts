@@ -34,8 +34,66 @@ export async function updateUserPositionsAndCalcProfit(
     //確定損益
   let realizedProfitLoss: number | null = null;
 
-    //Buyなら保有量を加算
-  if (transactionType === "Buy") {
+  // 既存のレコードを削除する場合のuser_positionsの更新処理
+  if (transactionType === "Reverse") {
+    
+    const numericAmount = Number(amount);
+  
+    if (numericAmount < 0) {
+      // これは「在庫を減らす」動き ⇒ Sellロジックと同じ
+      const currentAvg = totalAmount !== 0 ? totalCost / totalAmount : 0;
+  
+      // 売却益(取り消し益…？)
+      realizedProfitLoss = (Number(price) - currentAvg) * numericAmount; 
+      // ただし numericAmount < 0 なので、計算上はマイナス×(price - avg) になります
+      realizedProfitLoss -= Number(fee);
+  
+      // 保有量、コストを減らす
+      totalAmount += numericAmount;  // numericAmountは負なので実質マイナス
+      const costToRemove = currentAvg * Math.abs(numericAmount);
+      totalCost -= costToRemove;
+      if (totalAmount < 0) totalAmount = 0;
+      if (totalCost < 0) totalCost = 0;
+  
+      await pool.execute(`
+        INSERT INTO user_positions (user_id, coin_id, total_amount, total_cost, average_cost)
+        VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          total_amount = VALUES(total_amount),
+          total_cost   = VALUES(total_cost),
+          average_cost = VALUES(average_cost),
+          updated_at   = CURRENT_TIMESTAMP
+      `, [
+        userId,
+        coinId,
+        totalAmount,
+        totalCost,
+        totalAmount === 0 ? 0 : totalCost / totalAmount
+      ]);
+  
+    } else {
+      // numericAmount >= 0 ⇒ 「在庫を増やす」動き ⇒ Buyロジックと同じ
+      const newCost = numericAmount * Number(price) - Number(fee);
+      totalAmount += numericAmount;
+      totalCost += newCost;
+  
+      await pool.execute(`
+        INSERT INTO user_positions (user_id, coin_id, total_amount, total_cost, average_cost)
+        VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          total_amount = VALUES(total_amount),
+          total_cost   = VALUES(total_cost),
+          average_cost = VALUES(average_cost),
+          updated_at   = CURRENT_TIMESTAMP
+      `, [
+        userId,
+        coinId,
+        totalAmount,
+        totalCost,
+        totalAmount === 0 ? 0 : totalCost / totalAmount
+      ]);
+    }
+  } else if (transactionType === "Buy") {
     
     const newCost = Number(amount) * Number(price) - Number(fee);
 

@@ -10,7 +10,7 @@ export async function createTransactionService(userId: number, txData: Transacti
   // txDataのcoin_idがcoin_masterテーブルに登録されているかどうかチェックし、なければ登録(INSERT)する関数
   const coinId = await checkAndInsertCoinIfNeeded(txData.coin_id, txData.asset);
   
-
+  console.log("1----")
   // transactionsテーブルにINSERT
   const [result] = await pool.execute(`
     INSERT INTO transactions (
@@ -33,7 +33,7 @@ export async function createTransactionService(userId: number, txData: Transacti
     userId,
     txData.date,
     txData.exchange,
-    txData.transactionType,
+    txData.transaction_type,
     txData.asset,
     txData.price,
     txData.amount,
@@ -46,7 +46,7 @@ export async function createTransactionService(userId: number, txData: Transacti
     coinId
   ]);
 
-  
+  console.log("2----")
   // transactionsテーブルで生成されたtransaction_id
   const transactionId = (result as any).insertId;
 
@@ -54,7 +54,7 @@ export async function createTransactionService(userId: number, txData: Transacti
   const realizedProfitLoss = await updateUserPositionsAndCalcProfit(
     userId,
     coinId,
-    txData.transactionType,
+    txData.transaction_type,
     txData.amount,
     txData.price,
     txData.fee

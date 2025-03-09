@@ -5,7 +5,7 @@ export interface TransactionRow {
     id: number;
     date: string;
     exchange: string;
-    transactionType: string;
+    transaction_type: string;
     asset: string;
     price: string;
     amount: string;
