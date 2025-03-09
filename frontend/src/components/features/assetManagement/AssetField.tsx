@@ -49,7 +49,7 @@ export const AssetField = () => {
             return (
               <TableRow key={asset.asset} className="border-gray-700">
                 <TableCell>{rank}</TableCell>
-                <TableCell>{asset.asset}</TableCell>
+                <TableCell>{asset.asset.toUpperCase()}</TableCell>
                 <TableCell>${asset.currentPrice.toFixed(2)}</TableCell>
                 <TableCell
                   className={
