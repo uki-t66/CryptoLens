@@ -5,6 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL
 
 interface Asset {
     asset: string;           // 通貨シンボル (例: BTC, ETH)
+    image: string;           //Symbolのイメージ画像
     amount: number;          // 保有量
     averageCost: number;     // 平均取得単価
     currentPrice: number;    // 現在の価格

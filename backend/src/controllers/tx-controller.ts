@@ -181,7 +181,8 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
           up.coin_id, 
           up.total_amount, 
           up.average_cost, 
-          cm.symbol AS coin_symbol
+          cm.symbol AS coin_symbol,
+          cm.image AS coin_image
         FROM user_positions up
         JOIN coin_master cm ON up.coin_id = cm.coin_id
         WHERE up.user_id = ?
@@ -207,6 +208,7 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
       const summary = (positions as any[]).map((pos) => {
         const coinId = pos.coin_id;           // 例: "bitcoin"
         const coinSymbol = pos.coin_symbol;       // 例: "Bitcoin"
+        const coinImage = pos.coin_image; //そのSymbolのイメージ画像   
         const amount = Number(pos.total_amount) || 0;
         const avgCost = Number(pos.average_cost) || 0;
   
@@ -238,7 +240,8 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
   
         return {
           // ここで coinId ではなく coinName を返す
-          asset: coinSymbol, 
+          asset: coinSymbol,
+          image: coinImage,
           amount,
           averageCost: avgCost,
           currentPrice,

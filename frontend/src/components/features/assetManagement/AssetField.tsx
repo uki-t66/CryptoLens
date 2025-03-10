@@ -53,7 +53,10 @@ export const AssetField = () => {
                 {/* Rank */}
                 <TableCell>{rank}</TableCell>
                 {/* Asset */}
-                <TableCell>{asset.asset.toUpperCase()}</TableCell>
+                <TableCell>
+                  <img src={asset.image} alt={asset.asset} width={24} height={24} className="inline-block mr-2" />
+                  {asset.asset.toUpperCase()}
+                </TableCell>
                 <TableCell>${asset.currentPrice.toFixed(2)}</TableCell>
                 <TableCell
                   className={

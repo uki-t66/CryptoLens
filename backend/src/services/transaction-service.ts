@@ -8,7 +8,7 @@ import { TransactionRow } from "../types/tx-types";
 export async function createTransactionService(userId: number, txData: TransactionRow) {
 
   // txDataのcoin_idがcoin_masterテーブルに登録されているかどうかチェックし、なければ登録(INSERT)する関数
-  const coinId = await checkAndInsertCoinIfNeeded(txData.coin_id, txData.asset);
+  const coinId = await checkAndInsertCoinIfNeeded(txData.coin_id);
   
   console.log("1----")
   // transactionsテーブルにINSERT

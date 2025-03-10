@@ -1,7 +1,7 @@
 import { pool } from '../config/database';
 
 // coin_idがcoin_masterに存在するか確認し、なければINSERTする関数
-export async function checkAndInsertCoinIfNeeded(coinId: string, asset: string) {
+export async function checkAndInsertCoinIfNeeded(coinId: string) {
 
     // coin_masterテーブルにcoinIdが存在するかチェック
     const [rows] = await pool.execute(
@@ -29,8 +29,8 @@ export async function checkAndInsertCoinIfNeeded(coinId: string, asset: string) 
 
             // 詳細データを元にcoin_masterテーブルにINSERT
             await pool.execute(`
-                INSERT INTO coin_master (coin_id, symbol, name) VALUES (?, ?, ?)
-            `, [coinId, data.symbol , data.name]);
+                INSERT INTO coin_master (coin_id, symbol, name, image) VALUES (?, ?, ?)
+            `, [coinId, data.symbol, data.name, data.image.thumb]);
 
             return coinId;
     }
