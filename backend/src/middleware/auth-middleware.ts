@@ -31,7 +31,6 @@ export const authMiddleware = (
         };
 
         req.user = decoded;
-        console.log(req.user)
         next();
     } catch (error) {
         res.status(401).json({

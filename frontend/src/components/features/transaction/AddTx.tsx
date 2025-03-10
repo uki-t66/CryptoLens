@@ -51,7 +51,7 @@ export const AddTx = ({
   const [transactionTypeData, setTransactionTypeData] = useState<string>('')
   const [price, setPrice] = useState<string>('')
   const [fileName, setFileName] = useState<string | null>(null);
-  const [coingeckoId, setCoingeckoId] = useState<string>("")
+  const [coingeckoId, setCoingeckoId] = useState<string>("") //デフォルト空文字列
   const [isManualMode, setIsManualMode] = useState(false)
 
 
@@ -71,8 +71,11 @@ export const AddTx = ({
     setSelectedDate(newDate)
     fetchExchangeRate(newDate)
 
-    if (selectedCoin) {
-      fetchHistoricalPrice(selectedCoin.id, newDate)
+    // AutoモードかつAssetが入力済みの場合実行
+    if(!isManualMode){
+      if (selectedCoin) {
+        fetchHistoricalPrice(selectedCoin.id, newDate)
+      }
     }
   }
 
@@ -123,8 +126,12 @@ export const AddTx = ({
     setCoingeckoId(coin.id)
     setSuggestions([])
     setShowSuggestions(false)
-    if (selectedDate) {
-      fetchHistoricalPrice(coin.id, selectedDate)
+
+    // Autoモードかつ日付が選択されていたら実行
+    if(!isManualMode){
+      if (selectedDate) {
+        fetchHistoricalPrice(coin.id, selectedDate)
+      }
     }
   }
 
@@ -155,7 +162,7 @@ export const AddTx = ({
       }
     } catch (error) {
       console.error('価格の取得に失敗:', error)
-      toast.error('古い日付は価格が取れない場合があります。手動入力に切り替えます。',{
+      toast.error('1年前の価格データは取得できません。手動入力に切り替えます。',{
         duration: 9000,
         position: 'top-right',
       });
@@ -255,14 +262,20 @@ export const AddTx = ({
       // フォーム要素全体から FormData を作成
       const formData = new FormData(e.currentTarget)
 
+      if(!coingeckoId){
+        return toast.error('Asset欄検索候補から選択して入力してください。',{
+          duration: 9000,
+          position: 'top-center',
+        });
+      }
+
       formData.set("date", selectedDate)
-      formData.set("transactionType", transactionTypeData)
+      formData.set("transaction_type", transactionTypeData)
       formData.set("asset", searchTerm)
       formData.set("price", price)
-      formData.set("exchangeRate", exchangeRate)
-      if (coingeckoId) {
-        formData.set("coin_id", coingeckoId)
-      }
+      formData.set("exchange_rate", exchangeRate)
+      formData.set("coin_id", coingeckoId)
+
 
       const file = formData.get("file")
       console.log(file)
@@ -296,6 +309,8 @@ export const AddTx = ({
       setExchangeRate('')
       setTransactionTypeData('')
       setPrice('')
+      setFileName(null)
+      setCoingeckoId("")
       setIsManualMode(false)
     } catch (error) {
       console.error('Error submitting transaction:', error)
@@ -322,13 +337,16 @@ export const AddTx = ({
             </Button>
           </div>
           <DialogDescription>
-            ※Please enter Date, Asset first before entering Price
+            ✅ Autoモード: Price入力前に必ず Date と Asset を入力。「Asset」を入力すると候補が表示されるので選択してください。
           </DialogDescription>
           <DialogDescription>
-            ※When you enter “Asset,” a list of suggested Assets will be output. Click on any suggestion to select it.
+            ✅ Manualモード: 購入(売却)したAssetの正確な Price を入力してください。
           </DialogDescription>
           <DialogDescription>
-            ※If the currency does not appear, enter the symbol (ticker) in capital letters and switch to "Manual mode" for the price.
+            ✅ 両モードともAsset欄に表示される検索候補を選択して入力してください。
+          </DialogDescription>
+          <DialogDescription>
+            ⚠️ Symbol は BTC などの略称です。正式名称（例: Bitcoin）ではなく、必ずティッカーシンボルを入力してください。
           </DialogDescription>
         </DialogHeader>
         
