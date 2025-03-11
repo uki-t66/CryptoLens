@@ -43,7 +43,7 @@ export async function updateUserPositionsAndCalcProfit(
       // これは「在庫を減らす」動き ⇒ Sellロジックと同じ
       const currentAvg = totalAmount !== 0 ? totalCost / totalAmount : 0;
   
-      // 売却益(取り消し益…？)
+      // 売却益(取り消し益)
       realizedProfitLoss = (Number(price) - currentAvg) * numericAmount; 
       // ただし numericAmount < 0 なので、計算上はマイナス×(price - avg) になります
       realizedProfitLoss -= Number(fee);

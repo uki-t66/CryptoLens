@@ -38,35 +38,43 @@ export const createTransaction = async (
 // フロントエンドに表示するtransactionレコードを取得する関数
 export const getTransactions = async (req: AuthRequest, res: Response) => {
     try {
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 10;
-        const offset = (page - 1) * limit;
-
-        // 総件数を取得（型を指定）
-        const [totalRows] = await pool.execute<TotalCountRow[]>(
-            'SELECT COUNT(*) as total FROM transactions WHERE user_id = ?',
-            [req.user?.id]
-        );
-
-        // トランザクションデータを取得
-        const [transactions] = await pool.execute<RowDataPacket[]>(
-            `SELECT * FROM transactions 
-             WHERE user_id = ? 
-             AND transaction_type IN ('Buy', 'Sell', 'Reward', 'Transfer') 
-             ORDER BY date DESC 
-             LIMIT ?, ?`,
-            [req.user?.id, offset.toString(), limit.toString()]
-        );
-
-        res.json({
-            transactions,
-            total: totalRows[0].total
-        });
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = (page - 1) * limit;
+  
+      // 総件数を取得
+      const [totalRows] = await pool.execute<TotalCountRow[]>(
+        // deleted_at IS NULL も含めて件数を数えたい場合はここでも条件追加
+        `SELECT COUNT(*) as total 
+         FROM transactions 
+         WHERE user_id = ? 
+         AND transaction_type IN ('Buy', 'Sell', 'Reward', 'Transfer')
+         AND deleted_at IS NULL`,
+        [req.user?.id]
+      );
+  
+      // トランザクションデータを取得
+      const [transactions] = await pool.execute<RowDataPacket[]>(
+        `SELECT *
+         FROM transactions
+         WHERE user_id = ?
+           AND transaction_type IN ('Buy', 'Sell', 'Reward', 'Transfer')
+           AND deleted_at IS NULL
+         ORDER BY date DESC
+         LIMIT ?, ?`,
+        [req.user?.id, offset.toString(), limit.toString()]
+      );
+  
+      res.json({
+        transactions,
+        total: totalRows[0].total
+      });
     } catch (error) {
-        console.error('Error fetching transactions:', error);
-        res.status(500).json({ error: 'Failed to fetch transactions' });
+      console.error('Error fetching transactions:', error);
+      res.status(500).json({ error: 'Failed to fetch transactions' });
     }
-};
+  };
+  
 
 // 削除エンドポイント
 export const deleteTransaction = async (req: AuthRequest, res: Response):Promise<void> => {
@@ -128,6 +136,15 @@ export const deleteTransaction = async (req: AuthRequest, res: Response):Promise
   
       // 新規トランザクションとしてINSERT (createTransactionロジックを使ってレコード相殺)
       await createTransactionService(userId, reversedTx);
+
+       // 4) 該当の transaction_id に deleted_at をセット (ソフトデリート)
+       //    ここで "deleted_at = NOW()" のように更新する
+      await pool.execute(
+           `UPDATE transactions
+            SET deleted_at = NOW()
+            WHERE transaction_id = ? AND user_id = ?`,
+            [transactionId, userId]
+        );
   
        res.json({ success: true });
     } catch (err) {

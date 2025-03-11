@@ -29,9 +29,8 @@ export async function checkAndInsertCoinIfNeeded(coinId: string) {
 
             // 詳細データを元にcoin_masterテーブルにINSERT
             await pool.execute(`
-                INSERT INTO coin_master (coin_id, symbol, name, image) VALUES (?, ?, ?)
+                INSERT INTO coin_master (coin_id, symbol, name, image) VALUES (?, ?, ?, ?)
             `, [coinId, data.symbol, data.name, data.image.thumb]);
-
             return coinId;
     }
 

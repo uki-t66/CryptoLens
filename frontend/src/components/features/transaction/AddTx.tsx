@@ -314,7 +314,7 @@ export const AddTx = ({
       setIsManualMode(false)
     } catch (error) {
       console.error('Error submitting transaction:', error)
-      toast.error('送信に失敗しました。入力値を確認し直してください。',{
+      toast.error('送信に失敗しました。入力値を確認し時間を空けて再度試してください。',{
         duration: 9000,
         position: 'top-right',
       });
