@@ -90,6 +90,20 @@ export const deleteTransaction = async (req: AuthRequest, res: Response):Promise
      //削除するレコード
       const originalTx = rows[0] as TransactionRow;
       console.log(originalTx)
+
+
+      // 取引が "Buy" なら -amount (在庫を減らす)
+      // 取引が "Sell" なら +amount (在庫を増やす)
+        let reversedAmount: number;
+        if (originalTx.transaction_type === "Buy") {
+        reversedAmount = -Number(originalTx.amount); 
+        } else if (originalTx.transaction_type === "Sell") {
+        reversedAmount = Number(originalTx.amount);
+        } else {
+        // Transfer, Rewardなど他のタイプはどう扱うか要件次第
+        reversedAmount = -Number(originalTx.amount); 
+        }
+
   
       //会計システムの取引方式で相殺する、取り消し用の逆トランザクション(レコード)を作成
       //    - Buyを取り消すなら 量=マイナス or type=Sell
@@ -101,7 +115,7 @@ export const deleteTransaction = async (req: AuthRequest, res: Response):Promise
         transaction_type: "Reverse",
         asset: originalTx.asset,
         price: originalTx.price,
-        amount: String(-Number(originalTx.amount)),    // 逆数量(負の数)
+        amount: String(reversedAmount),    // 逆数量(負の数)
         fee: originalTx.fee ? String(-Number(originalTx.fee)) : String(0),
         blockchain: originalTx.blockchain,
         exchange_rate: originalTx.exchange_rate,
@@ -122,45 +136,6 @@ export const deleteTransaction = async (req: AuthRequest, res: Response):Promise
     }
   };
   
-
-// 削除エンドポイント
-// export const deleteTransaction = async (req: AuthRequest, res: Response) => {
-//     try {
-//         const { id } = req.params;
-//         const userId = req.user?.id;
-
-//         await pool.execute(
-//             'DELETE FROM transactions WHERE transaction_id = ? AND user_id = ?',
-//             [id, userId]
-//         );
-
-//         res.json({ success: true });
-//     } catch (error) {
-//         console.error('Error deleting transaction:', error);
-//         res.status(500).json({ error: 'Failed to delete transaction' });
-//     }
-// };
-
-// 更新エンドポイント
-// export const updateTransaction = async (req: AuthRequest, res: Response) => {
-//     try {
-//         const { id } = req.params;
-//         const userId = req.user?.id;
-//         const transaction = req.body;
-
-//         await pool.execute(
-//             `UPDATE transactions 
-//              SET price = ?, amount = ?, fee = ?
-//              WHERE transaction_id = ? AND user_id = ?`,
-//             [transaction.price, transaction.amount, transaction.fee, id, userId]
-//         );
-
-//         res.json({ success: true });
-//     } catch (error) {
-//         console.error('Error updating transaction:', error);
-//         res.status(500).json({ error: 'Failed to update transaction' });
-//     }
-// };
 
 
 // ユーザーの資産情報を返すエンドポイント
