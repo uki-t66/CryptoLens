@@ -27,7 +27,7 @@ export const AssetField = () => {
   return (
     <div className="mx-10 h-[88%] relative bg-gray-800 rounded-lg shadow-sm border border-gray-700 overflow-auto">
       <Table>
-        <TableCaption>Crypto Currency Portfolio</TableCaption>
+        <TableCaption>資産が表示されない場合は、ブラウザを更新してください。ただし、更新を頻繁に行うと表示されないことがあります。</TableCaption>
         <TableHeader className="sticky top-0 bg-gray-800">
           <TableRow className="pointer-events-none border-gray-700">
             <TableHead className="text-gray-200 font-medium">Rank</TableHead>
