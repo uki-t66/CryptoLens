@@ -4,6 +4,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom";
+import { useAssetSummary } from "@/components/features/assetManagement/useAssetSummary";
 
 interface LogoutProps {
   open: boolean
@@ -15,6 +16,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export const Logout = ({ open, onClose }: LogoutProps) => {
     const navigate = useNavigate();
+    const { clearAssets } = useAssetSummary();
 
     // 例: handleLogout
     const handleLogout = async () => {
@@ -28,6 +30,8 @@ export const Logout = ({ open, onClose }: LogoutProps) => {
           throw new Error('Failed to logout');
         }
 
+        // ログアウト時にAssetSummaryContextをリセット
+        clearAssets();
         navigate('/login');
         await onClose();
       } catch (error) {
