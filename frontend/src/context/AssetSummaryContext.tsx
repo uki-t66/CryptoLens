@@ -1,3 +1,4 @@
+import { useAuth } from '@/components/features/auth/AuthContext';
 import { Asset } from '@/types/assets-types';
 import React, { createContext, useState, useEffect } from 'react'
 import toast from "react-hot-toast"
@@ -10,6 +11,7 @@ const API_URL = import.meta.env.VITE_API_URL
 interface AssetSummaryContextValue {
   assets: Asset[];
   fetchAssets: () => void;
+  clearAssets: () => void;
   jpy: number;
 }
 
@@ -19,6 +21,7 @@ export const AssetSummaryContext = createContext<AssetSummaryContextValue | unde
 
 // Providerコンポーネント
 export const AssetSummaryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [jpy, setJpy] = useState<number>(0);
 
@@ -74,16 +77,23 @@ export const AssetSummaryProvider: React.FC<{ children: React.ReactNode }> = ({ 
   
   }
 
+  // fetchしたデータをリセット
+  const clearAssets = () => {
+    setAssets([]);
+    setJpy(0);
+  };
   
 
-  // 初回マウント時に fetch
+  // 初回マウント時と認証状態が変わったときに fetch する
   useEffect(() => {
-    fetchAssets();
-    fetchJpy();
-  }, []);
+    if (isAuthenticated) {
+      fetchAssets();
+      fetchJpy();
+    }
+  }, [isAuthenticated]);
 
   return (
-    <AssetSummaryContext.Provider value={{ assets, fetchAssets, jpy }}>
+    <AssetSummaryContext.Provider value={{ assets, fetchAssets, clearAssets, jpy }}>
       {children}
     </AssetSummaryContext.Provider>
   );

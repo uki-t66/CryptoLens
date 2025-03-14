@@ -16,7 +16,6 @@ interface AssetSummaryItemProps {
 
   export const AssetSummary:React.FC<AssetSummaryProps> = ( { JPY, Assets } ) => {
 
-    console.log(Assets[0])
 
     // 保有している通貨の現在価格を合算したドル表記の総資産額
     const totalUsdValue = Number(
@@ -36,9 +35,9 @@ interface AssetSummaryItemProps {
     );
 
     // 平均取得単価から総資産変動率を算出
-    const totalValueChangeRate = Number(
+    const totalValueChangeRate = totalUsdValue !== 0 ? Number(
       (((totalUsdValue / initialInvestment) - 1) * 100).toFixed(2)
-    );
+    ) : 0;
 
     // 総資産の含み損益(USD)
     const usdProfitLossAmount = Number(
