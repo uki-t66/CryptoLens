@@ -82,24 +82,6 @@ const App = () => {
           }
         />
         
-        <Route
-          path="/analytics"
-          element={
-            <AuthGuard>
-              <div className="fixed flex w-full h-full">
-                <nav className={`bg-gray-800 border border-gray-700 transition-all duration-350 ${isSidebarOpen ? 'w-56' : 'w-16'}`}>
-                  <Sidebar 
-                    isOpen={isSidebarOpen}
-                    onToggle={toggleSidebar}
-                  />
-                </nav>
-                <main className="flex-grow pb-10">
-                  <Transaction />
-                </main>
-              </div>
-            </AuthGuard>
-          }
-        />
         
         {/* デフォルトでログインページにリダイレクト */}
         <Route path="*" element={<Navigate to="/login" replace />} />
