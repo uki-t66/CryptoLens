@@ -1,32 +1,26 @@
+import { Asset } from '@/types/assets-types';
 import React, { createContext, useState, useEffect } from 'react'
 import toast from "react-hot-toast"
 
+const ExchangeRate_API = import.meta.env.VITE_ExchangeRate_API
 const API_URL = import.meta.env.VITE_API_URL
 
-interface Asset {
-    asset: string;           // 通貨シンボル (例: BTC, ETH)
-    image: string;           //Symbolのイメージ画像
-    amount: number;          // 保有量
-    averageCost: number;     // 平均取得単価
-    currentPrice: number;    // 現在の価格
-    totalValue: number;      // 評価額 (amount * currentPrice)
-    change24h: string;       // 24hの変動率 (例: "+2.34%")
-    profitLossRate: string;  // 含み損益率 (例: "+3.33%")
-    profitLossAmount: number;// 含み損益額 (例: 2500)
-  }
 
 // Contextが持つ値の型
 interface AssetSummaryContextValue {
   assets: Asset[];
   fetchAssets: () => void;
+  jpy: number;
 }
 
 // Contextの作成
 export const AssetSummaryContext = createContext<AssetSummaryContextValue | undefined>(undefined);
 
+
 // Providerコンポーネント
 export const AssetSummaryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [jpy, setJpy] = useState<number>(0);
 
   // データ取得関数
   const fetchAssets = async () => {
@@ -57,13 +51,39 @@ export const AssetSummaryProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  const fetchJpy = async() => {
+
+    const today = new Date();
+    // YYYY-MM-DD 形式に変換
+    const formattedDate = today.toISOString().split("T")[0];
+  
+    try {
+      const response = await fetch(`${ExchangeRate_API}/${formattedDate}?from=USD&to=JPY`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+  
+      setJpy(data.rates.JPY);
+  
+    } catch (error) {
+      console.error("Error fetching assets:", error);
+    }
+  
+  }
+
+  
+
   // 初回マウント時に fetch
   useEffect(() => {
     fetchAssets();
+    fetchJpy();
   }, []);
 
   return (
-    <AssetSummaryContext.Provider value={{ assets, fetchAssets }}>
+    <AssetSummaryContext.Provider value={{ assets, fetchAssets, jpy }}>
       {children}
     </AssetSummaryContext.Provider>
   );

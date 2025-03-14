@@ -152,6 +152,21 @@ export const deleteTransaction = async (req: AuthRequest, res: Response):Promise
       res.status(500).json({ error: "Failed to reverse transaction" });
     }
   };
+
+  //ユーザーのDashboard情報を返すエンドポイント
+  export const getDashboardSummary = async (req: AuthRequest, res: Response) => {
+    try {
+
+        // 認証されたUserId
+        const userId = req.user?.id;
+         if (!userId) {
+            res.status(401).json({ message: "Unauthorized" });
+      }
+        
+    } catch (error) {
+        
+    }
+  }
   
 
 
@@ -161,6 +176,7 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
     const COINGECKO_API = process.env.COINGECKO_API;
   
     try {
+        // 認証されたUserId
       const userId = req.user?.id;
       if (!userId) {
             res.status(401).json({ message: "Unauthorized" });
@@ -179,7 +195,17 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
         JOIN coin_master cm ON up.coin_id = cm.coin_id
         WHERE up.user_id = ?
       `, [userId]);
+
+    // 確定損益データ
+    const [rows] = await pool.query(`
+        SELECT SUM(realized_profit_loss) AS total_realized_profit_loss
+        FROM realized_profit_loss
+        WHERE user_id = ?
+    `, [userId])as [RowDataPacket[], any];
   
+    const totalRealizedProfitLoss = rows[0].total_realized_profit_loss;
+
+
       // 空なら空配列を返す
       if ((positions as any[]).length === 0) {
         res.json({ summary: [] });
@@ -229,7 +255,8 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
         if (change24hValue > 0) {
           change24h = "+" + change24h;
         }
-  
+
+
         return {
           // ここで coinId ではなく coinName を返す
           asset: coinSymbol,
@@ -241,6 +268,7 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
           change24h,
           profitLossRate,
           profitLossAmount,
+          totalRealizedProfitLoss
         };
       });
   
