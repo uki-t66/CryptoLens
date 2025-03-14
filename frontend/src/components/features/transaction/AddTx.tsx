@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect, useRef } from 'react'
 import { Textarea } from "@/components/ui/textarea"
 import toast from "react-hot-toast"
+import { useAssetSummary } from "../assetManagement/useAssetSummary"
 
 
 const COINGECKO_API = import.meta.env.VITE_COINGECKO_API
@@ -54,6 +55,7 @@ export const AddTx = ({
   const [coingeckoId, setCoingeckoId] = useState<string>("") //デフォルト空文字列
   const [isManualMode, setIsManualMode] = useState(false)
 
+  const { fetchAssets } = useAssetSummary();
 
   // 添付可能なファイル
   const allowedMimeTypes = [
@@ -300,6 +302,7 @@ export const AddTx = ({
 
       // TxHistory更新
       await onSuccess()
+      fetchAssets();
       onClose()
 
       // フォームリセット
