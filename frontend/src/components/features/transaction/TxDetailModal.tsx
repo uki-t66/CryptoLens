@@ -17,13 +17,9 @@ import { toast } from "@/hooks/use-toast"
 const API_URL = import.meta.env.VITE_API_URL
 
 interface TxDetailProps {
-  /** モーダルの開閉状態 */
   isOpen: boolean
-  /** モーダルを閉じるための関数 */
   onClose: () => void
-  /** 詳細・編集対象のトランザクション */
   transaction: TransactionData
-  /** 取引履歴を再取得して一覧を更新するための関数 */
   fetchTransactions: () => void
 }
 

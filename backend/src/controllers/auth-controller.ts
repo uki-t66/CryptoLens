@@ -140,6 +140,30 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+// ログアウト
+export const logout = async (req: Request, res: Response): Promise<void> => {
+    try {
+      // Cookie を空にし、maxAge=0や expires を過去日時にする
+      res.cookie('jwt', '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 0, // あるいは expires: new Date(0) など
+      });
+  
+      res.status(200).json({
+        success: true,
+        message: 'ログアウトしました'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'ログアウトに失敗しました'
+      });
+    }
+  };
+
 
 export const verifyAuth = async (req: Request, res: Response): Promise<void> => {
     try {
