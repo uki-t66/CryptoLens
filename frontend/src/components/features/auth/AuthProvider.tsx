@@ -26,7 +26,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           credentials: 'include', // Cookieを含める
         });
         if (response.ok) {
-          console.log("初回のログインだぜ")
           setIsAuthenticated(true);
           fetchAssets();
           fetchDailyAsset();
