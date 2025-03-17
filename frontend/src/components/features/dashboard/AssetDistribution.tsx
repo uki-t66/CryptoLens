@@ -22,7 +22,6 @@ export const AssetDistribution = () => {
     currentPrice: asset.currentPrice, // 現在の価格を追加
   }));
 
-  console.log(allocations); // データ確認用
 
   // **カスタムツールチップ関数**
   const CustomTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload }) => {
