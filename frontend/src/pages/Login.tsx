@@ -33,7 +33,6 @@ export const Login = () => {
       const data = await response.json();
 
       if (data.success) {
-        console.log("ろぐいんせいこうだぜー")
         fetchAssets();
         fetchDailyAsset();
         fetchJpy();

@@ -26,7 +26,7 @@ export const Dashboard = () => {
 
          {/* グラフセクション */}
         <div className="mx-10 h-full flex gap-8 overflow-auto">
-            <AssetChart ChartData={chartData} />
+            <AssetChart data={chartData} />
             <AssetDistribution />
         </div>
       </div>

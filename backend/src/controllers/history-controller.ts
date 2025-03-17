@@ -10,7 +10,6 @@ export const getDailyAssetHistory = async (req: Request, res: Response): Promise
        res.status(401).json({ error: 'Unauthorized' });
     }
 
-    console.log("どうもー")
 
     // asset_historyからユーザの全期間 or 直近30日などを取得
     // 例: 直近30日にしたいなら WHERE date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
@@ -30,7 +29,6 @@ export const getDailyAssetHistory = async (req: Request, res: Response): Promise
       value: Number(r.total_value)
     }));
 
-    console.log(data[0].date)
 
 
     res.json({ data });

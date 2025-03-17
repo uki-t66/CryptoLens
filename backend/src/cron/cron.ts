@@ -1,44 +1,8 @@
 import cron from 'node-cron';
 import { pool } from '../config/database';
 
-/**
- * 日次で realized_profit_loss テーブルを集計し、
- * daily_realized_profit_loss にアップサートする
- */
-export function scheduleDailyRPL() {
-  // 毎日0時に実行 (cron式: "0 0 * * *")
-  cron.schedule('0 0 * * *', async () => {
-    try {
-      console.log("=== Daily RPL cron started ===");
 
-      // 1) 当日の realized_profit_loss をユーザ別に合計
-      const [rows] = await pool.query(`
-        SELECT user_id, COALESCE(SUM(realized_profit_loss), 0) as daily_sum
-        FROM realized_profit_loss
-        WHERE date = CURDATE()
-        GROUP BY user_id
-      `);
 
-      // 2) daily_realized_profit_loss にアップサート
-      for (const row of rows as any[]) {
-        const userId = row.user_id;
-        const sum = row.daily_sum;
-
-        await pool.execute(`
-          INSERT INTO daily_realized_profit_loss (user_id, date, total_realized_loss)
-          VALUES (?, CURDATE(), ?)
-          ON DUPLICATE KEY UPDATE
-            total_realized_loss = VALUES(total_realized_loss),
-            created_at = CURRENT_TIMESTAMP
-        `, [userId, sum]);
-      }
-
-      console.log("=== Daily RPL cron finished ===");
-    } catch (error) {
-      console.error("Daily RPL cron error:", error);
-    }
-  });
-}
 
 
 /**

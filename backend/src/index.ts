@@ -6,7 +6,7 @@ import cookieParser from 'cookie-parser';
 import txRoutes from './routes/tx-routes';
 import historyRoutes from "./routes/history-routes"
 
-import { scheduleDailyRPL, scheduleDailyAssetHistory } from './cron/cron';
+import { scheduleDailyAssetHistory } from './cron/cron';
 
 dotenv.config();
 
@@ -29,7 +29,6 @@ app.use('/api/transactions', txRoutes);
 app.use('/api/history', historyRoutes);
 
 // cron設定を起動時に呼び出す
-scheduleDailyRPL();
 scheduleDailyAssetHistory();
 
 app.listen(port, () => {

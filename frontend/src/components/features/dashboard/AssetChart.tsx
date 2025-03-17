@@ -5,8 +5,12 @@ import { ChartDetail } from './ChartDetail';
 import { useState } from 'react';
 
 
+interface MyChartProps {
+  data: ChartData[];
+}
 
-export const AssetChart: React.FC<ChartData[]>  = ({ ChartData }) => {
+
+export const AssetChart: React.FC<MyChartProps>  = ({ data }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleClick = () => {
@@ -26,7 +30,7 @@ export const AssetChart: React.FC<ChartData[]>  = ({ ChartData }) => {
         </h2>
       </div>
       <ResponsiveContainer width="100%" height="90%">
-        <AreaChart data={ChartData}>
+        <AreaChart data={data}>
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
