@@ -7,33 +7,54 @@ import { RowDataPacket } from 'mysql2';
 
 
 //  フロントエンドのAddTxからsubmitされたformをDBに保存する関数
-export const createTransaction = async (
-  req: AuthRequest,
-  res: Response
-): Promise<void> => {
-  try {
+export const createTransaction = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
       const userId = req.user?.id;
       if (!userId) {
-          res.status(401).json({ message: 'Not authenticated' });
-          return Promise.resolve();
+        res.status(401).json({ message: 'Not authenticated' });
+        return;
       }
-
-      // formの取引データ
+  
+      // フロントエンドから送られてきた取引データを取得
       const txData = req.body;
-      console.log(txData)
-      
+      console.log("Received transaction data:", txData);
+  
+      // 必須項目のバリデーション（最低限、取引タイプ、数量、coin_id は必要）
+      if (!txData.transaction_type || !txData.amount || !txData.coin_id) {
+        res.status(400).json({ error: '必須項目が不足しています。' });
+        return;
+      }
+  
+      // Sell 取引の場合、ユーザーが保有している数量以下かをチェック
+      if (txData.transaction_type === 'Sell') {
+        const sellAmount = Number(txData.amount);
+  
+        // ユーザーの保有数量を user_positions から取得
+        const [rows] = await pool.execute(
+          `SELECT total_amount FROM user_positions WHERE user_id = ? AND coin_id = ?`,
+          [userId, txData.coin_id]
+        );
+        let currentHoldings = 0;
+        if ((rows as any[]).length > 0) {
+          currentHoldings = Number((rows as any[])[0].total_amount);
+        }
+        
+        // 売却数量が現在の保有数量を超えていればエラーを返す
+        if (sellAmount > currentHoldings) {
+          res.status(400).json({ error: '売却数量が現在の保有数量を超えています。' });
+          return;
+        }
+      }
+  
+      // ここで取引作成サービスを呼び出し、DB に登録する
       await createTransactionService(userId, txData);
-
+  
       res.status(201).json({ success: true });
-    
-      return Promise.resolve();
-
-  } catch (error) {
+    } catch (error) {
+      console.error("Error in createTransaction:", error);
       res.status(500).json({ success: false });
-    
-      return Promise.resolve();
-  }
-};
+    }
+  };
 
 // フロントエンドに表示するtransactionレコードを取得する関数
 export const getTransactions = async (req: AuthRequest, res: Response) => {

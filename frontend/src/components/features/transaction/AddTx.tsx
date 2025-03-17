@@ -260,6 +260,11 @@ export const AddTx = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
+    // Asset
+    if (!searchTerm || !selectedCoin || !coingeckoId) {
+      return toast.error("Asset欄は検索候補から選択してください。", { duration: 9000, position: 'top-center' });
+    }
+
     try {
       // フォーム要素全体から FormData を作成
       const formData = new FormData(e.currentTarget)
@@ -289,8 +294,14 @@ export const AddTx = ({
         body: formData
       })
 
+      // 400 番台などのエラーコードを返している場合に処理を開始
       if (!response.ok) {
-        throw new Error('Transaction submission failed')
+        const errorData = await response.json();
+        toast.error(errorData.error || 'エラーが発生しました。', {
+          duration: 9000,
+          position: 'top-center',
+        });
+        return;
       }
 
       
