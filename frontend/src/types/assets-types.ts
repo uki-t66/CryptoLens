@@ -8,11 +8,11 @@ export interface Asset {
     change24h: string; 
     profitLossRate: string;
     profitLossAmount: number;
-    totalRealizedProfitLoss: string;
   }
   
 export interface AssetSummaryProps {
     JPY: number;  
     Assets: Asset[]; 
+    TRPL: number;
 }
   

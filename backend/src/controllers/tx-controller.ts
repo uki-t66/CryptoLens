@@ -81,51 +81,71 @@ export const deleteTransaction = async (req: AuthRequest, res: Response): Promis
     try {
       const { transactionId } = req.params;
       const userId = req.user?.id as number;
-      console.log(`これはtransactionIdの${transactionId}`);
-      console.log(`これはuserIdの${req.user?.id}`);
       
-      // 取引情報の取得
-      const [rows] = await pool.execute<RowDataPacket[]>(
+      // 対象取引の取得
+      const [rows] = await pool.execute(
         "SELECT * FROM transactions WHERE transaction_id=? AND user_id=?",
         [transactionId, userId]
       );
-      if (rows.length === 0) {
+      if ((rows as any[]).length === 0) {
         res.status(404).json({ error: "Transactionが見つかりません。" });
-        return; // ここで早期終了
+        return;
       }
   
-      const originalTx = rows[0] as TransactionRow;
-      console.log(originalTx);
+      const originalTx = (rows as any[])[0] as TransactionRow;
   
-      let reversedAmount: number;
+      let reverseType: string;
       if (originalTx.transaction_type === "Buy") {
-        reversedAmount = -Number(originalTx.amount);
+        reverseType = "ReverseBuy";
       } else if (originalTx.transaction_type === "Sell") {
-        reversedAmount = Number(originalTx.amount);
+        reverseType = "ReverseSell";
       } else {
-        reversedAmount = -Number(originalTx.amount);
+        reverseType = "Reverse";
       }
   
-      const reversedTx: TransactionRow = {
+      // ReverseSellの場合、元取引のtx_notesからremovedCostを取得
+      let removedCost: number | undefined;
+      if (originalTx.transaction_type === "Sell" && originalTx.tx_notes) {
+        try {
+          const notesObj = JSON.parse(String(originalTx.tx_notes));
+          removedCost = notesObj.removedCost;
+        } catch (e) {
+          removedCost = undefined;
+        }
+      }
+  
+      // 逆仕訳レコードの生成（removedCost をプロパティとして追加）
+      const reversedTx: TransactionRow & { removedCost?: number } = {
         id: userId,
         date: new Date().toISOString().slice(0, 10),
         exchange: originalTx.exchange,
-        transaction_type: "Reverse",
+        transaction_type: reverseType,
         asset: originalTx.asset,
-        price: originalTx.price,
-        amount: String(reversedAmount),
-        fee: originalTx.fee ? String(-Number(originalTx.fee)) : String(0),
+        price: originalTx.price,  
+        amount: originalTx.amount, // 逆仕訳の場合、元の数量をそのまま利用
+        fee: originalTx.fee,
         blockchain: originalTx.blockchain,
         exchange_rate: originalTx.exchange_rate,
         file: originalTx.file,
-        tx_hash: originalTx?.tx_hash,
-        tx_notes: originalTx?.tx_notes,
+        tx_hash: originalTx.tx_hash,
+        // tx_notes には removedCost の情報を JSON 形式で記録
+        tx_notes: removedCost !== undefined ? JSON.stringify({ removedCost }) : originalTx.tx_notes,
         coin_id: originalTx.coin_id,
+        removedCost: removedCost  // extraValue として渡す
       };
-      console.log(reversedTx);
   
+      // 逆仕訳レコードを新たにINSERT（user_positions 更新も内部で実施）
       await createTransactionService(userId, reversedTx);
+
+      // Sell取り消しの場合、対応するrealized_profit_lossレコードを削除する
+     if (originalTx.transaction_type === "Sell") {
+        await pool.execute(
+        `DELETE FROM realized_profit_loss WHERE transaction_id = ? AND user_id = ?`,
+        [transactionId, userId]
+        );
+     }
   
+      // 元の取引を論理削除
       await pool.execute(
         `UPDATE transactions
          SET deleted_at = NOW()
@@ -198,6 +218,7 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
       )) as [RowDataPacket[], any];
   
       const totalRealizedProfitLoss = rows[0].total_realized_profit_loss;
+      console.log(totalRealizedProfitLoss)
   
       // 取得結果が空の場合は、早期に空の配列を返す
       if ((positions as any[]).length === 0) {
@@ -241,6 +262,7 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
         if (change24hValue > 0) {
           change24h = "+" + change24h;
         }
+
         return {
           asset: coinSymbol,
           image: coinImage,
@@ -251,11 +273,13 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
           change24h,
           profitLossRate,
           profitLossAmount,
-          totalRealizedProfitLoss,
         };
       });
   
-      res.json({ summary });
+      res.json({
+        summary,
+        totalRealizedProfitLoss: totalRealizedProfitLoss || 0
+      });
     } catch (error) {
       console.error("Error in getAssetSummary:", error);
       res.status(500).json({ error: "Server Error" });

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
+import { useAssetSummary } from '../assetManagement/useAssetSummary';
 
 // APIのURLを環境変数から取得
 const API_URL = import.meta.env.VITE_API_URL;
@@ -15,6 +16,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
+  const { fetchAssets, fetchJpy, fetchDailyAsset } = useAssetSummary();
+
   // アプリ初回レンダリング時にJWTを確認
   useEffect(() => {
     const verifyToken = async () => {
@@ -23,7 +26,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           credentials: 'include', // Cookieを含める
         });
         if (response.ok) {
+          console.log("初回のログインだぜ")
           setIsAuthenticated(true);
+          fetchAssets();
+          fetchDailyAsset();
+          fetchJpy();
           navigate('/dashboard'); 
         } else {
           setIsAuthenticated(false);

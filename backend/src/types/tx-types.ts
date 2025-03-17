@@ -14,7 +14,7 @@ export interface TransactionRow {
     exchange_rate: string;
     file?: File;
     tx_hash?: string;
-    tx_notes?: Text;
+    tx_notes?: string | undefined;
     coin_id: string;
   }
 

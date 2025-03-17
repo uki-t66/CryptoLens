@@ -5,15 +5,17 @@ import App from './App.tsx'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './components/features/auth/AuthProvider.tsx'
 import { AssetSummaryProvider } from './context/AssetSummaryContext.tsx'
+import { Toaster as HotToaster } from 'react-hot-toast';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
       <BrowserRouter>
-        <AuthProvider>
         <AssetSummaryProvider>
-         <App />
-        </AssetSummaryProvider>
-        </AuthProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+          </AssetSummaryProvider>
+        <HotToaster />
       </BrowserRouter>
   </StrictMode>,
 )

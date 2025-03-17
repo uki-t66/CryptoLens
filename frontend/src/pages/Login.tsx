@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/components/features/auth/AuthContext';
+import { useAssetSummary } from '@/components/features/assetManagement/useAssetSummary';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -11,6 +12,8 @@ export const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  const { fetchAssets, fetchJpy, fetchDailyAsset } = useAssetSummary();
 
   // useContextを使用
   const { login } = useAuth();
@@ -30,6 +33,10 @@ export const Login = () => {
       const data = await response.json();
 
       if (data.success) {
+        console.log("ろぐいんせいこうだぜー")
+        fetchAssets();
+        fetchDailyAsset();
+        fetchJpy();
         // ログイン認証成功したらtop画面のdashboardへ遷移
         navigate('/dashboard');
         login();
