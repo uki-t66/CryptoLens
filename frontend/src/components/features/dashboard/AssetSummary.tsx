@@ -14,7 +14,7 @@ interface AssetSummaryItemProps {
   }
 
 
-  export const AssetSummary:React.FC<AssetSummaryProps> = ( { JPY, Assets } ) => {
+  export const AssetSummary:React.FC<AssetSummaryProps> = ( { JPY, Assets, TRPL } ) => {
 
 
     // 保有している通貨の現在価格を合算したドル表記の総資産額
@@ -101,14 +101,12 @@ interface AssetSummaryItemProps {
 
 
     // 確定損益(USD)
-    const totalRealizedProfitLoss = Assets && Assets.length > 0 && Assets[0].totalRealizedProfitLoss !== undefined
-            ? Number(Number(Assets[0].totalRealizedProfitLoss).toFixed(1))
-            : 0;
+    const totalRealizedProfitLoss = isNaN(TRPL)
+            ? 0
+            : Number(TRPL.toFixed(1));
     // 確定損益(JPY)
     const jpyTotalRealizedProfitLoss = totalRealizedProfitLoss * JPY
 
-
-    console.log(typeof totalRealizedProfitLoss)
 
     
     
@@ -176,31 +174,46 @@ const AssetSummaryItem = ({ title, value, jpyValue, change, changeCurrency, usdP
           <div
             className={`text-2xl font-bold mb-2 ${profitColorClass}`}
           >
-            {usdToJpy ? (
-                <>
-                  ${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  {usdProfitLossAmount !== undefined && (
-                    <> ($
-                      {usdProfitLossAmount.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    )</>
-                  )}
-                </>
-              ) : (
-                <>
-                  ¥{jpyValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  {jpyProfitLossAmount !== undefined && (
-                    <> (¥
-                      {jpyProfitLossAmount.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    )</>
-                  )}
-                </>
+          {usdToJpy ? (
+            <>
+              <div>
+                ${value.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </div>
+              {usdProfitLossAmount !== undefined && (
+                <div>
+                  ($
+                  {usdProfitLossAmount.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                  )
+                </div>
               )}
+            </>
+          ) : (
+            <>
+              <div>
+                ¥{jpyValue.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </div>
+              {jpyProfitLossAmount !== undefined && (
+                <div>
+                  (¥
+                  {jpyProfitLossAmount.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                  )
+                </div>
+              )}
+            </>
+          )}
+
 
           </div>
 

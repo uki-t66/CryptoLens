@@ -7,33 +7,54 @@ import { RowDataPacket } from 'mysql2';
 
 
 //  フロントエンドのAddTxからsubmitされたformをDBに保存する関数
-export const createTransaction = async (
-  req: AuthRequest,
-  res: Response
-): Promise<void> => {
-  try {
+export const createTransaction = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
       const userId = req.user?.id;
       if (!userId) {
-          res.status(401).json({ message: 'Not authenticated' });
-          return Promise.resolve();
+        res.status(401).json({ message: 'Not authenticated' });
+        return;
       }
-
-      // formの取引データ
+  
+      // フロントエンドから送られてきた取引データを取得
       const txData = req.body;
-      console.log(txData)
-      
+      console.log("Received transaction data:", txData);
+  
+      // 必須項目のバリデーション（最低限、取引タイプ、数量、coin_id は必要）
+      if (!txData.transaction_type || !txData.amount || !txData.coin_id) {
+        res.status(400).json({ error: '必須項目が不足しています。' });
+        return;
+      }
+  
+      // Sell 取引の場合、ユーザーが保有している数量以下かをチェック
+      if (txData.transaction_type === 'Sell') {
+        const sellAmount = Number(txData.amount);
+  
+        // ユーザーの保有数量を user_positions から取得
+        const [rows] = await pool.execute(
+          `SELECT total_amount FROM user_positions WHERE user_id = ? AND coin_id = ?`,
+          [userId, txData.coin_id]
+        );
+        let currentHoldings = 0;
+        if ((rows as any[]).length > 0) {
+          currentHoldings = Number((rows as any[])[0].total_amount);
+        }
+        
+        // 売却数量が現在の保有数量を超えていればエラーを返す
+        if (sellAmount > currentHoldings) {
+          res.status(400).json({ error: '売却数量が現在の保有数量を超えています。' });
+          return;
+        }
+      }
+  
+      // ここで取引作成サービスを呼び出し、DB に登録する
       await createTransactionService(userId, txData);
-
+  
       res.status(201).json({ success: true });
-    
-      return Promise.resolve();
-
-  } catch (error) {
+    } catch (error) {
+      console.error("Error in createTransaction:", error);
       res.status(500).json({ success: false });
-    
-      return Promise.resolve();
-  }
-};
+    }
+  };
 
 // フロントエンドに表示するtransactionレコードを取得する関数
 export const getTransactions = async (req: AuthRequest, res: Response) => {
@@ -77,81 +98,89 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
   
 
 // 削除エンドポイント
-export const deleteTransaction = async (req: AuthRequest, res: Response):Promise<void> => {
+export const deleteTransaction = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      // パラメータ取得
       const { transactionId } = req.params;
       const userId = req.user?.id as number;
-      console.log(`これはtransactionIdの${transactionId}`)
-      console.log(`これはuserIdの${req.user?.id}`)
       
-  
-      // 取引情報を取得
-      const [rows] = await pool.execute<RowDataPacket[]>(
+      // 対象取引の取得
+      const [rows] = await pool.execute(
         "SELECT * FROM transactions WHERE transaction_id=? AND user_id=?",
         [transactionId, userId]
       );
-      if (rows.length === 0) {
+      if ((rows as any[]).length === 0) {
         res.status(404).json({ error: "Transactionが見つかりません。" });
+        return;
       }
-
-     //削除するレコード
-      const originalTx = rows[0] as TransactionRow;
-      console.log(originalTx)
-
-
-      // 取引が "Buy" なら -amount (在庫を減らす)
-      // 取引が "Sell" なら +amount (在庫を増やす)
-        let reversedAmount: number;
-        if (originalTx.transaction_type === "Buy") {
-        reversedAmount = -Number(originalTx.amount); 
-        } else if (originalTx.transaction_type === "Sell") {
-        reversedAmount = Number(originalTx.amount);
-        } else {
-        // Transfer, Rewardなど他のタイプはどう扱うか要件次第
-        reversedAmount = -Number(originalTx.amount); 
-        }
-
   
-      //会計システムの取引方式で相殺する、取り消し用の逆トランザクション(レコード)を作成
-      //    - Buyを取り消すなら 量=マイナス or type=Sell
-      //    - Sellを取り消すなら 量=プラス or type=Buy という扱いもアリ
-      const reversedTx:TransactionRow = {
+      const originalTx = (rows as any[])[0] as TransactionRow;
+  
+      let reverseType: string;
+      if (originalTx.transaction_type === "Buy") {
+        reverseType = "ReverseBuy";
+      } else if (originalTx.transaction_type === "Sell") {
+        reverseType = "ReverseSell";
+      } else {
+        reverseType = "Reverse";
+      }
+  
+      // ReverseSellの場合、元取引のtx_notesからremovedCostを取得
+      let removedCost: number | undefined;
+      if (originalTx.transaction_type === "Sell" && originalTx.tx_notes) {
+        try {
+          const notesObj = JSON.parse(String(originalTx.tx_notes));
+          removedCost = notesObj.removedCost;
+        } catch (e) {
+          removedCost = undefined;
+        }
+      }
+  
+      // 逆仕訳レコードの生成（removedCost をプロパティとして追加）
+      const reversedTx: TransactionRow & { removedCost?: number } = {
         id: userId,
-        date: new Date().toISOString().slice(0, 10), //削除するレコードを相殺する日付
+        date: new Date().toISOString().slice(0, 10),
         exchange: originalTx.exchange,
-        transaction_type: "Reverse",
+        transaction_type: reverseType,
         asset: originalTx.asset,
-        price: originalTx.price,
-        amount: String(reversedAmount),    // 逆数量(負の数)
-        fee: originalTx.fee ? String(-Number(originalTx.fee)) : String(0),
+        price: originalTx.price,  
+        amount: originalTx.amount, // 逆仕訳の場合、元の数量をそのまま利用
+        fee: originalTx.fee,
         blockchain: originalTx.blockchain,
         exchange_rate: originalTx.exchange_rate,
         file: originalTx.file,
-        tx_hash: originalTx?.tx_hash,
-        tx_notes: originalTx?.tx_notes,
+        tx_hash: originalTx.tx_hash,
+        // tx_notes には removedCost の情報を JSON 形式で記録
+        tx_notes: removedCost !== undefined ? JSON.stringify({ removedCost }) : originalTx.tx_notes,
         coin_id: originalTx.coin_id,
+        removedCost: removedCost  // extraValue として渡す
       };
-      console.log(reversedTx)
   
-      // 新規トランザクションとしてINSERT (createTransactionロジックを使ってレコード相殺)
+      // 逆仕訳レコードを新たにINSERT（user_positions 更新も内部で実施）
       await createTransactionService(userId, reversedTx);
 
-       // 4) 該当の transaction_id に deleted_at をセット (ソフトデリート)
-       //    ここで "deleted_at = NOW()" のように更新する
-      await pool.execute(
-           `UPDATE transactions
-            SET deleted_at = NOW()
-            WHERE transaction_id = ? AND user_id = ?`,
-            [transactionId, userId]
+      // Sell取り消しの場合、対応するrealized_profit_lossレコードを削除する
+     if (originalTx.transaction_type === "Sell") {
+        await pool.execute(
+        `DELETE FROM realized_profit_loss WHERE transaction_id = ? AND user_id = ?`,
+        [transactionId, userId]
         );
+     }
   
-       res.json({ success: true });
+      // 元の取引を論理削除
+      await pool.execute(
+        `UPDATE transactions
+         SET deleted_at = NOW()
+         WHERE transaction_id = ? AND user_id = ?`,
+        [transactionId, userId]
+      );
+  
+      res.json({ success: true });
     } catch (err) {
       console.error("Error reversing transaction:", err);
       res.status(500).json({ error: "Failed to reverse transaction" });
     }
   };
+  
 
   //ユーザーのDashboard情報を返すエンドポイント
   export const getDashboardSummary = async (req: AuthRequest, res: Response) => {
@@ -176,15 +205,16 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
     const COINGECKO_API = process.env.COINGECKO_API;
   
     try {
-        // 認証されたUserId
+      // 認証されたUserId
       const userId = req.user?.id;
       if (!userId) {
-            res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ message: "Unauthorized" });
+        return; // レスポンス送信後に早期終了
       }
   
-      // user_positionsを coin_master とJOINして、coinの name を取得
-      // (例: user_positions.coin_id = coin_master.coin_id)
-      const [positions] = await pool.query(`
+      // user_positionsとcoin_masterをJOINして、必要なデータを取得
+      const [positions] = await pool.query(
+        `
         SELECT 
           up.coin_id, 
           up.total_amount, 
@@ -194,21 +224,27 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
         FROM user_positions up
         JOIN coin_master cm ON up.coin_id = cm.coin_id
         WHERE up.user_id = ?
-      `, [userId]);
-
-    // 確定損益データ
-    const [rows] = await pool.query(`
+      `,
+        [userId]
+      );
+  
+      // 確定損益データの取得
+      const [rows] = (await pool.query(
+        `
         SELECT SUM(realized_profit_loss) AS total_realized_profit_loss
         FROM realized_profit_loss
         WHERE user_id = ?
-    `, [userId])as [RowDataPacket[], any];
+      `,
+        [userId]
+      )) as [RowDataPacket[], any];
   
-    const totalRealizedProfitLoss = rows[0].total_realized_profit_loss;
-
-
-      // 空なら空配列を返す
+      const totalRealizedProfitLoss = rows[0].total_realized_profit_loss;
+      console.log(totalRealizedProfitLoss)
+  
+      // 取得結果が空の場合は、早期に空の配列を返す
       if ((positions as any[]).length === 0) {
         res.json({ summary: [] });
+        return;
       }
   
       // CoinGeckoで現在価格と24h変動率を取得
@@ -216,32 +252,26 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
       const coingeckoUrl = `${COINGECKO_API}/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true`;
   
       const response = await fetch(coingeckoUrl);
-      if(!response.ok){
-        res.status(404).json({ error: "資産情報を取得できませんでした。時間をおいてブラウザを更新してください。" });
+      if (!response.ok) {
+        res.status(404).json({
+          error: "資産情報を取得できませんでした。時間をおいてブラウザを更新してください。",
+        });
+        return;
       }
       const priceData = await response.json();
-      // priceData[coin_id] = { usd: 12345, usd_24h_change: 2.34, ... }
   
       // レスポンス用の配列を構築
       const summary = (positions as any[]).map((pos) => {
-        const coinId = pos.coin_id;           // 例: "bitcoin"
-        const coinSymbol = pos.coin_symbol;       // 例: "Bitcoin"
-        const coinImage = pos.coin_image; //そのSymbolのイメージ画像   
+        const coinId = pos.coin_id;
+        const coinSymbol = pos.coin_symbol;
+        const coinImage = pos.coin_image;
         const amount = Number(pos.total_amount) || 0;
         const avgCost = Number(pos.average_cost) || 0;
-  
-        // CoinGeckoから取得した現在価格・24h変動率
         const cg = priceData[coinId] || {};
-        const currentPrice = cg.usd || 0; // USD
+        const currentPrice = cg.usd || 0;
         const change24hValue = cg.usd_24h_change || 0;
-  
-        // 評価額
         const totalValue = amount * currentPrice;
-  
-        // 含み損益
         const profitLossAmount = (currentPrice - avgCost) * amount;
-  
-        // 含み損益率 (avgCostが0でないときのみ計算)
         let profitLossRate = "0.00%";
         if (avgCost !== 0) {
           profitLossRate = ((currentPrice - avgCost) / avgCost * 100).toFixed(2) + "%";
@@ -249,16 +279,12 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
             profitLossRate = "+" + profitLossRate;
           }
         }
-  
-        // 24h変動率
         let change24h = change24hValue.toFixed(2) + "%";
         if (change24hValue > 0) {
           change24h = "+" + change24h;
         }
 
-
         return {
-          // ここで coinId ではなく coinName を返す
           asset: coinSymbol,
           image: coinImage,
           amount,
@@ -268,14 +294,17 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
           change24h,
           profitLossRate,
           profitLossAmount,
-          totalRealizedProfitLoss
         };
       });
   
-      res.json({ summary });
+      res.json({
+        summary,
+        totalRealizedProfitLoss: totalRealizedProfitLoss || 0
+      });
     } catch (error) {
       console.error("Error in getAssetSummary:", error);
       res.status(500).json({ error: "Server Error" });
     }
   };
+  
   

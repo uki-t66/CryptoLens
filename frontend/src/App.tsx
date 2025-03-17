@@ -9,7 +9,6 @@ import { SignUp } from './pages/SignUp';
 import { Login } from './pages/Login';
 import { AuthGuard } from './components/features/auth/AuthGuard';
 import { Toaster } from './components/ui/toaster';
-import { Toaster as HotToaster } from 'react-hot-toast';
 
 const App = () => {
   // sidebarの開閉の挙動を制御
@@ -104,7 +103,6 @@ const App = () => {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
       <Toaster />  {/*クリップボードコピー*/}
-      <HotToaster /> {/*Loadingスタイル*/}
     </>
   );
 };

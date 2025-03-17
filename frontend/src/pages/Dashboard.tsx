@@ -6,8 +6,8 @@ import { useAssetSummary } from '@/components/features/assetManagement/useAssetS
 
 export const Dashboard = () => {
 
-    // Contextから assets を取得
-  const { assets, jpy } = useAssetSummary();
+  const { assets,totalRealizedProfitLoss, jpy, chartData } = useAssetSummary();
+
   // 「amount が 0 でない」資産だけを対象にする
   const filteredAssets = assets.filter((a) => a.amount !== 0);
 
@@ -21,12 +21,12 @@ export const Dashboard = () => {
 
         {/* 総資産サマリー */}
         <div className="mx-10 mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <AssetSummary JPY={jpy} Assets={filteredAssets} />
+          <AssetSummary JPY={jpy} Assets={filteredAssets} TRPL={totalRealizedProfitLoss} />
         </div>
 
          {/* グラフセクション */}
         <div className="mx-10 h-full flex gap-8 overflow-auto">
-            <AssetChart />
+            <AssetChart ChartData={chartData} />
             <AssetDistribution />
         </div>
       </div>
