@@ -39,5 +39,6 @@ jobs:
             git pull origin main
             npm install
             npm run build
-            pm2 restart backend || pm2 start dist/index.js --name backend
+            pm2 delete backend || true
+            pm2 start /home/ubuntu/CryptoLens/backend/dist/index.js --name backend
           EOF
