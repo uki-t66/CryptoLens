@@ -17,7 +17,8 @@ export const createTransaction = async (req: AuthRequest, res: Response): Promis
   
       // フロントエンドから送られてきた取引データを取得
       const txData = req.body;
-      console.log("Received transaction data:", txData);
+      
+      console.log("自動デプロイ完了")
   
       // 必須項目のバリデーション（最低限、取引タイプ、数量、coin_id は必要）
       if (!txData.transaction_type || !txData.amount || !txData.coin_id) {
@@ -239,7 +240,6 @@ export const getAssetSummary = async (req: AuthRequest, res: Response): Promise<
       )) as [RowDataPacket[], any];
   
       const totalRealizedProfitLoss = rows[0].total_realized_profit_loss;
-      console.log(totalRealizedProfitLoss)
   
       // 取得結果が空の場合は、早期に空の配列を返す
       if ((positions as any[]).length === 0) {

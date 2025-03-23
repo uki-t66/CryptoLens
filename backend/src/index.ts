@@ -12,7 +12,6 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 8000;
-console.log("自動デプロイ完了")
 
 app.use(cors({
     origin: process.env.FRONTEND_URL,  // フロントエンドのURL

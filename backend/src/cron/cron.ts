@@ -95,8 +95,11 @@ export function scheduleDailyAssetHistory() {
       }
 
       console.log("=== Daily asset_history cron finished ===");
+      console.log(new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }));
     } catch (error) {
       console.error("Daily asset_history cron error:", error);
     }
+  },{
+    timezone: 'Asia/Tokyo'
   });
 }
