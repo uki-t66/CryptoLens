@@ -56,7 +56,7 @@ export const AssetChart: React.FC<MyChartProps>  = ({ data }) => {
               } else if (value >= 1_000_000) {
                 return `$${(value / 1_000_000).toFixed(1)}M`;
               } else if (value >= 1_000) {
-                return `$${(value / 10000).toFixed(1)}k`;
+                return `$${(value / 1000).toFixed(1)}k`;
               }
               return `$${value.toLocaleString()}`;
             }}
