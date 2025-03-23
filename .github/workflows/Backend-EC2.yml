@@ -36,6 +36,8 @@ jobs:
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "bash -s" << 'EOF'
             cd /home/ubuntu/CryptoLens/backend
+            git reset --hard HEAD
+            git clean -fd
             git pull origin main
             npm install
             npm run build
