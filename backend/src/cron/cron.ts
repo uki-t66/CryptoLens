@@ -10,7 +10,7 @@ import { pool } from '../config/database';
  * asset_history に保存する。
  */
 export function scheduleDailyAssetHistory() {
-  cron.schedule('0 0 * * *', async () => {
+  cron.schedule('0 23 * * *', async () => {
     console.log("=== Daily asset_history cron started ===");
     try {
       // 1) user_positions × coin_master 全員分を取得

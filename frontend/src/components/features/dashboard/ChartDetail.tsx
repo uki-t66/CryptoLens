@@ -25,7 +25,7 @@ export const ChartDetail = ({ open, onClose }: ChartDetailProps) => {
                             <span className="text-blue-400 font-semibold mr-2">※</span>売却時の損益は年間確定損益に反映されます。
                         </li>
                         <li className="flex items-start">
-                            <span className="text-blue-400 font-semibold mr-2">※</span>日本時間0時に総資産が更新されます。
+                            <span className="text-blue-400 font-semibold mr-2">※</span>日本時間23時に総資産が更新されます。
                         </li>
                     </ul>
                 </div>
