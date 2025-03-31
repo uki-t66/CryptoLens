@@ -81,7 +81,7 @@ const App = () => {
             </AuthGuard>
           }
         />
-        <Route
+        {/* <Route
           path="/setting"
           element={
             <AuthGuard>
@@ -98,7 +98,7 @@ const App = () => {
               </div>
             </AuthGuard>
           }
-        />
+        /> */}
         {/* デフォルトでログインページにリダイレクト */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

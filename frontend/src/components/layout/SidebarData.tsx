@@ -5,7 +5,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 // import QueryStatsIcon from '@mui/icons-material/QueryStats';
 // import BookmarkIcon from '@mui/icons-material/Bookmark';
 // import TaskIcon from '@mui/icons-material/Task';
-import SettingsIcon from '@mui/icons-material/Settings';
+// import SettingsIcon from '@mui/icons-material/Settings';
 import type { SvgIconComponent } from '@mui/icons-material';
 
 
@@ -59,10 +59,10 @@ export const SIDEBAR_DATA: SidebarItems[] = [
     //     icon: TaskIcon,
     //     link: "/airdrop"
     // },
-    {
-        id: "setting",
-        title: "Setting",
-        icon: SettingsIcon,
-        link: "/setting"
-    }
+    // {
+    //     id: "setting",
+    //     title: "Setting",
+    //     icon: SettingsIcon,
+    //     link: "/setting"
+    // }
 ]
