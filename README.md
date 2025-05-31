@@ -45,24 +45,27 @@ GuestUserPassword$&8
 
 ①　サイドバーのTransactionページへ移動。Transactionページ内の ＋ マークをクリック。  
 
-![Image](https://github.com/user-attachments/assets/2c936823-75a9-4b21-a8db-a44051a2d83c)
+![Image](https://github.com/uki-t66/CryptoLens/blob/main/images/Image1.png?raw=true)
 
 ②　formが開いたら、注意事項に沿ってformを埋めていきます。optional項目のform欄は入力必須ではありません。なるべく正確な取引を記録するためManualモードでの記録をおすすめしています。両モードとも必ずAssetフォーム欄に通貨名を入力したら、検索候補に表示される入力予定の通貨を選択してformを埋めてください。  
 
-![Image](https://github.com/user-attachments/assets/a2ffe037-02b2-412c-9a23-da6eea08d9e4)
+![Image](https://github.com/uki-t66/CryptoLens/blob/main/images/Image2.png?raw=true)
 
 ③　formを入力してsubmitすると「SUI」という通貨の取引履歴が記録されます。記録したレコードをクリックすると詳細ページが開き、取引記録を削除することもできます。また、レコードに表示されているTxHashはクリップボードへコピーでき、即座にブロックチェーンエクスプローラーでTxHashを利用することもできます。
 
-![Image](https://github.com/user-attachments/assets/5b0e8d7e-3e6a-4c73-88f0-38f9694c3c3c)
+![Image](https://github.com/uki-t66/CryptoLens/blob/main/images/Image3.png?raw=true)
 
 ④　③の説明で添付した画像には、「SUI」は ＄4918.54 の価格で記録されていて、その価格でユーザーは通貨を購入したことになります。そして④の画像には「SUI」は ＄4720 の現在価格で表示されています。 Profit / Loss には ＄-198.54 と表示され、この価格が現在の含み損額になります。Transactionページの記録したデータは変化しませんが、Assetページの現在価格や含み損益率・額は動的に変化する仕様になっています。  
  
-![Image](https://github.com/user-attachments/assets/1753c7ec-2826-47d2-ab25-a518e3f6d415)  
+![Image](https://github.com/uki-t66/CryptoLens/blob/main/images/Image4.png?raw=true)  
 
 ⑤　取引を記録したことにより、Dashboardの総資産や24H含み損益、資産配分の円グラフも動的に変化します。総資産推移のグラフは日本時間23時にcron.scheduleによって自動で更新されます。　　
 
-![Image](https://github.com/user-attachments/assets/7105761d-b96c-4739-9247-00f0c35d9673)
-![Image](https://github.com/user-attachments/assets/515e5e71-8f93-4ee3-a4c4-f7f33e997aec)  
+### 記録前  
+![Image](https://github.com/uki-t66/CryptoLens/blob/main/images/Image5.png?raw=true)  
+### 記録後  
+年間確定損益は購入した通貨を売却して初めて、画面上に確定損益として記録されます。購入しただけでは記録されません。
+![Image](https://github.com/uki-t66/CryptoLens/blob/main/images/Image6.png?raw=true)  
 
 ## 技術.システム構成  
 ### フロントエンド  
