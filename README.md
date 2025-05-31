@@ -1,5 +1,5 @@
 # CryptoLens
-URL: ~~https://www.cryptolens.jp~~ (現在非公開)  
+URL: ~~`https://www.cryptolens.jp`~~ (現在非公開)  
 
 仮想通貨の取引を記録するWebアプリケーションです。  
 
